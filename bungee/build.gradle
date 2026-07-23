@@ -1,0 +1,21 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'org.kyouroga'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    implementation 'org.yaml:snakeyaml:2.0'
+    compileOnly 'net.md-5:bungeecord-api:1.21-R0.4'
+}

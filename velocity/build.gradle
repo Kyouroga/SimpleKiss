@@ -1,0 +1,25 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'org.kyouroga'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':universal')
+    implementation 'org.yaml:snakeyaml:2.0'
+    compileOnly 'com.velocitypowered:velocity-api:4.0.0'
+}

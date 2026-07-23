@@ -1,0 +1,13 @@
+# Maximum distance between the player charging a kiss and the target.
+distance: 8.0
+# Number of consecutive server ticks required to trigger the kiss effect.
+charge-time: 20
+# Maximum angle, in degrees, between the player's view and the target.
+look-angle: 15.0
+# Number of server ticks before the same player can trigger another kiss.
+cooldown: 100
+particles:
+  # Number of heart particles to spawn.
+  count: 10
+  # Spread of the particles around the target location.
+  offset: 0.5

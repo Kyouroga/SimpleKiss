@@ -1,0 +1,12 @@
+name: SimpleKiss
+author: kyouroga
+description: A simple plugin that allows players to kiss each other in Minecraft.
+version: 1.0
+main: org.kyouroga.simplekiss.bukkit.SimpleKiss
+api-version: 1.21
+commands:
+  spkiss:
+    description: SimpleKiss plugin commands
+    usage: /<command> reload
+    permission: simplekiss.reload
+    permission-message: You do not have permission to reload SimpleKiss.

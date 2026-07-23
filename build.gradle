@@ -1,0 +1,75 @@
+import org.gradle.api.tasks.bundling.Jar
+
+group = 'org.kyouroga'
+version = '1.0.0'
+
+def artifactNames = [
+    bukkit: 'SimpleKiss-Spigot',
+    bungee: 'SimpleKiss-BungeeCord',
+    velocity: 'SimpleKiss-Velocity'
+]
+
+subprojects {
+    apply plugin: 'java'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    repositories {
+        mavenCentral()
+        maven {
+            url = 'https://repo.papermc.io/repository/maven-public/'
+        }
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Jar).configureEach {
+        archiveVersion.set('')
+        archiveClassifier.set('')
+        if (artifactNames.containsKey(project.name)) {
+            archiveBaseName.set(artifactNames[project.name])
+        }
+    }
+}
+
+def platformProjects = subprojects.findAll { artifactNames.containsKey(it.name) }
+
+tasks.register('copyArtifacts', Copy) {
+    group = 'build'
+    description = 'Copies built platform jars into the root target directory'
+    dependsOn platformProjects.collect { it.tasks.named('jar') }
+
+    from(platformProjects.collect { it.layout.buildDirectory.dir('libs') }) {
+        include '*.jar'
+        eachFile { file -> file.path = file.name }
+    }
+
+    into rootProject.layout.projectDirectory.dir('target')
+}
+
+tasks.register('build') {
+    group = 'build'
+    description = 'Builds all subprojects and copies their jars into the root target folder'
+    dependsOn(subprojects.collect { it.tasks.named('build') })
+    dependsOn(tasks.named('copyArtifacts'))
+}
+
+tasks.register('clean') {
+    group = 'build'
+    description = 'Cleans all subprojects and removes the root target folder'
+    dependsOn(subprojects.collect { it.tasks.named('clean') })
+    doLast {
+        delete rootProject.file('target')
+    }
+}

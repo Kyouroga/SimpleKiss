@@ -1,0 +1,35 @@
+# Gradle
+.gradle/
+build/
+**/build/
+target/
+**/bin/
+out/
+
+# Compiled files
+*.class
+*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+*.orig
+
+# Java crash logs
+hs_err_pid*.log

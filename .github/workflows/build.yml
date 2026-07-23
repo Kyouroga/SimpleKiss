@@ -1,0 +1,151 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      build_target:
+        description: Build target for this run
+        required: true
+        default: spigot
+        type: choice
+        options:
+          - spigot
+          - bungeecord
+          - velocity
+          - all-platforms
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x gradlew
+
+      - name: Read project version
+        run: echo "PROJECT_VERSION=$(./gradlew properties -q | awk '/^version:/ {print $2}')" >> "$GITHUB_ENV"
+
+      - name: Build Spigot jar
+        if: github.event_name == 'push' || inputs.build_target == 'spigot'
+        run: |
+          ./gradlew :bukkit:build
+          mkdir -p target
+          cp bukkit/build/libs/SimpleKiss-Spigot.jar target/SimpleKiss-Spigot.jar
+
+      - name: Build BungeeCord jar
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+        run: |
+          ./gradlew :bungee:build
+          mkdir -p target
+          cp bungee/build/libs/SimpleKiss-BungeeCord.jar target/SimpleKiss-BungeeCord.jar
+
+      - name: Build Velocity jar
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+        run: |
+          ./gradlew :velocity:build
+          mkdir -p target
+          cp velocity/build/libs/SimpleKiss-Velocity.jar target/SimpleKiss-Velocity.jar
+
+      - name: Build all platform jars
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+        run: ./gradlew clean build
+
+      - name: Upload Spigot artifact
+        if: github.event_name == 'push' || inputs.build_target == 'spigot'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-spigot-jar
+          if-no-files-found: error
+          path: target/SimpleKiss-Spigot.jar
+
+      - name: Upload BungeeCord artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-bungeecord-jar
+          if-no-files-found: error
+          path: target/SimpleKiss-BungeeCord.jar
+
+      - name: Upload Velocity artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-velocity-jar
+          if-no-files-found: error
+          path: target/SimpleKiss-Velocity.jar
+
+      - name: Upload platform jars
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-platform-jars
+          if-no-files-found: error
+          path: |
+            target/SimpleKiss-Spigot.jar
+            target/SimpleKiss-BungeeCord.jar
+            target/SimpleKiss-Velocity.jar
+
+      - name: Publish Spigot jar to Modrinth
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_SPIGOT_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-Spigot.jar
+          name: SimpleKiss ${{ env.PROJECT_VERSION }}
+          version: ${{ env.PROJECT_VERSION }}
+          version-type: release
+          loaders: paper
+          game-versions: 1.21
+
+      - name: Publish BungeeCord jar to Modrinth
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_BUNGEECORD_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-BungeeCord.jar
+          name: SimpleKiss BungeeCord ${{ env.PROJECT_VERSION }}
+          version: ${{ env.PROJECT_VERSION }}
+          version-type: release
+          loaders: bungeecord
+
+      - name: Publish Velocity jar to Modrinth
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_VELOCITY_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-Velocity.jar
+          name: SimpleKiss Velocity ${{ env.PROJECT_VERSION }}
+          version: ${{ env.PROJECT_VERSION }}
+          version-type: release
+          loaders: velocity
+
+      - name: Publish all platform jars to Modrinth
+        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_SPIGOT_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: |
+            target/SimpleKiss-Spigot.jar
+            target/SimpleKiss-BungeeCord.jar
+            target/SimpleKiss-Velocity.jar
+          name: SimpleKiss ${{ env.PROJECT_VERSION }}
+          version: ${{ env.PROJECT_VERSION }}
+          version-type: release
+          loaders: paper
+          game-versions: 1.21

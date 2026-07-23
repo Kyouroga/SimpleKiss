@@ -1,0 +1,5 @@
+name: SimpleKiss
+author: kyouroga
+version: 1.0.0
+description: A simple plugin that allows players to kiss each other in Minecraft.
+main: org.kyouroga.simplekiss.bungee.BungeePlugin

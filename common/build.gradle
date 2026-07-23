@@ -1,0 +1,15 @@
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:26.1.1.build.18-alpha'
+    compileOnly 'com.velocitypowered:velocity-api:4.0.0'
+    compileOnly 'net.md-5:bungeecord-api:1.21-R0.4'
+
+    testImplementation 'io.papermc.paper:paper-api:26.1.1.build.18-alpha'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}

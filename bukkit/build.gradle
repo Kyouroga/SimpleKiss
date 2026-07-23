@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(':common')
+    implementation project(':bootstrap')
+    implementation project(':universal')
+    compileOnly 'io.papermc.paper:paper-api:26.1.1.build.18-alpha'
+}
+
+sourceSets {
+    main {
+        resources.srcDirs = ['src/main/resources']
+    }
+}
