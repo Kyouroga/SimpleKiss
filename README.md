@@ -86,30 +86,6 @@ target/
 
 The `common`, `bootstrap`, and `universal` modules provide shared or internal code. They are not release jars.
 
-## GitHub Actions and Modrinth
-
-The build workflow runs automatically when changes are pushed to `main` or `master`.
-It can also be started manually from the Actions tab for another branch.
-
-Pushes to `main` or `master` publish one Modrinth version for each platform, using the same project version:
-
-- `target/SimpleKiss-Spigot.jar` to the Spigot/Paper project
-- `target/SimpleKiss-BungeeCord.jar` to the BungeeCord project
-- `target/SimpleKiss-Velocity.jar` to the Velocity project
-
-The workflow also stores all three jars as the `SimpleKiss-platform-jars` workflow artifact.
-
-Add these repository secrets before enabling Modrinth publishing:
-
-- `MODRINTH_TOKEN`: a Modrinth personal access token with project version publishing permission.
-- `MODRINTH_SPIGOT_PROJECT_ID`: the Modrinth project ID for the Spigot/Paper SimpleKiss project.
-- `MODRINTH_BUNGEECORD_PROJECT_ID`: the Modrinth project ID for the BungeeCord SimpleKiss project.
-- `MODRINTH_VELOCITY_PROJECT_ID`: the Modrinth project ID for the Velocity SimpleKiss project.
-
-Each project must use its matching loader and metadata file. The Spigot jar contains
-`plugin.yml`, the BungeeCord jar contains `bungee.yml`, and the Velocity jar contains
-`velocity-plugin.json`.
-
 ## Project Layout
 
 ```text
