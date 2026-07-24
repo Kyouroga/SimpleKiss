@@ -55,8 +55,8 @@ jobs:
       - name: Build summary
         if: always()
         run: |
-          ARTIFACTS_URL="https://${GITHUB_SERVER_URL#https://}/${GITHUB_REPOSITORY}/suites/${GITHUB_RUN_ID}/artifacts"
-          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ARTIFACTS_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/suites/${GITHUB_RUN_ID}/artifacts"
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
           ## Pull Request Build Summary
 
           | Item | Value |
@@ -64,10 +64,4 @@ jobs:
           | Trigger | pull_request |
           | Validation | Gradle test and build |
           | Artifacts | [Download artifacts](${ARTIFACTS_URL}) |
-
-          | Artifact | Download |
-          | --- | --- |
-          | SimpleKiss-Spigot.jar | [Download](${ARTIFACTS_URL}) |
-          | SimpleKiss-BungeeCord.jar | [Download](${ARTIFACTS_URL}) |
-          | SimpleKiss-Velocity.jar | [Download](${ARTIFACTS_URL}) |
           EOF
