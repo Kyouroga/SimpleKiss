@@ -9,6 +9,7 @@ out/
 # Compiled files
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # IDE
 .idea/
