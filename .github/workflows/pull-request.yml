@@ -1,26 +1,54 @@
-name: Pull Request Checks
+name: Process Pull Request
 
 on:
   pull_request:
     branches: [ main, master ]
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '25'
           cache: gradle
 
-      - name: Grant execute permission for Gradle wrapper
+      - name: Make Gradle executable
         run: chmod +x gradlew
 
-      - name: Run tests and package check
-        run: ./gradlew test build
+      - name: Run tests and build
+        run: ./gradlew clean test build
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simplekiss-pr-artifacts
+          if-no-files-found: error
+          retention-days: 2
+          path: |
+            target/SimpleKiss-Spigot.jar
+            target/SimpleKiss-BungeeCord.jar
+            target/SimpleKiss-Velocity.jar
+
+      - name: Build summary
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          Pull Request Build Summary
+
+          - Trigger: pull request
+          - Validation: Gradle test and build
+          - Artifacts: simplekiss-pr-artifacts
+
+          Downloadable outputs:
+          - SimpleKiss-Spigot.jar
+          - SimpleKiss-BungeeCord.jar
+          - SimpleKiss-Velocity.jar
+          EOF

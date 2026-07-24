@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       build_target:
@@ -21,49 +19,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '25'
           cache: gradle
 
-      - name: Grant execute permission for Gradle wrapper
+      - name: Make Gradle executable
         run: chmod +x gradlew
 
-      - name: Read project version
+      - name: Read version
         run: echo "PROJECT_VERSION=$(./gradlew properties -q | awk '/^version:/ {print $2}')" >> "$GITHUB_ENV"
 
-      - name: Build Spigot jar
-        if: github.event_name == 'push' || inputs.build_target == 'spigot'
+      - name: Build Spigot
+        if: inputs.build_target == 'spigot'
         run: |
           ./gradlew :bukkit:build
           mkdir -p target
           cp bukkit/build/libs/SimpleKiss-Spigot.jar target/SimpleKiss-Spigot.jar
 
-      - name: Build BungeeCord jar
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+      - name: Build BungeeCord
+        if: inputs.build_target == 'bungeecord'
         run: |
           ./gradlew :bungee:build
           mkdir -p target
           cp bungee/build/libs/SimpleKiss-BungeeCord.jar target/SimpleKiss-BungeeCord.jar
 
-      - name: Build Velocity jar
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+      - name: Build Velocity
+        if: inputs.build_target == 'velocity'
         run: |
           ./gradlew :velocity:build
           mkdir -p target
           cp velocity/build/libs/SimpleKiss-Velocity.jar target/SimpleKiss-Velocity.jar
 
-      - name: Build all platform jars
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+      - name: Build all platforms
+        if: inputs.build_target == 'all-platforms'
         run: ./gradlew clean build
 
       - name: Upload Spigot artifact
-        if: github.event_name == 'push' || inputs.build_target == 'spigot'
+        if: inputs.build_target == 'spigot'
         uses: actions/upload-artifact@v4
         with:
           name: SimpleKiss-spigot-jar
@@ -71,7 +69,7 @@ jobs:
           path: target/SimpleKiss-Spigot.jar
 
       - name: Upload BungeeCord artifact
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+        if: inputs.build_target == 'bungeecord'
         uses: actions/upload-artifact@v4
         with:
           name: SimpleKiss-bungeecord-jar
@@ -79,15 +77,15 @@ jobs:
           path: target/SimpleKiss-BungeeCord.jar
 
       - name: Upload Velocity artifact
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+        if: inputs.build_target == 'velocity'
         uses: actions/upload-artifact@v4
         with:
           name: SimpleKiss-velocity-jar
           if-no-files-found: error
           path: target/SimpleKiss-Velocity.jar
 
-      - name: Upload platform jars
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+      - name: Upload platform artifacts
+        if: inputs.build_target == 'all-platforms'
         uses: actions/upload-artifact@v4
         with:
           name: SimpleKiss-platform-jars
@@ -97,8 +95,8 @@ jobs:
             target/SimpleKiss-BungeeCord.jar
             target/SimpleKiss-Velocity.jar
 
-      - name: Publish Spigot jar to Modrinth
-        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+      - name: Publish Spigot to Modrinth
+        if: inputs.build_target == 'spigot'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ secrets.MODRINTH_SPIGOT_PROJECT_ID }}
@@ -110,8 +108,8 @@ jobs:
           loaders: paper
           game-versions: 1.21
 
-      - name: Publish BungeeCord jar to Modrinth
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'bungeecord'
+      - name: Publish BungeeCord to Modrinth
+        if: inputs.build_target == 'bungeecord'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ secrets.MODRINTH_BUNGEECORD_PROJECT_ID }}
@@ -122,8 +120,8 @@ jobs:
           version-type: release
           loaders: bungeecord
 
-      - name: Publish Velocity jar to Modrinth
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'velocity'
+      - name: Publish Velocity to Modrinth
+        if: inputs.build_target == 'velocity'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ secrets.MODRINTH_VELOCITY_PROJECT_ID }}
@@ -134,8 +132,8 @@ jobs:
           version-type: release
           loaders: velocity
 
-      - name: Publish all platform jars to Modrinth
-        if: github.event_name == 'workflow_dispatch' && inputs.build_target == 'all-platforms'
+      - name: Publish all platforms to Modrinth
+        if: inputs.build_target == 'all-platforms'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ secrets.MODRINTH_SPIGOT_PROJECT_ID }}
@@ -149,3 +147,34 @@ jobs:
           version-type: release
           loaders: paper
           game-versions: 1.21
+
+      - name: Build summary
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          Build Summary
+
+          - Trigger: manual
+          - Target: ${{ inputs.build_target }}
+          - Version: ${{ env.PROJECT_VERSION }}
+          - Modrinth: enabled
+
+          Artifacts:
+          EOF
+
+          case "${{ inputs.build_target }}" in
+            spigot)
+              echo "- SimpleKiss-Spigot.jar" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            bungeecord)
+              echo "- SimpleKiss-BungeeCord.jar" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            velocity)
+              echo "- SimpleKiss-Velocity.jar" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            all-platforms)
+              echo "- SimpleKiss-Spigot.jar" >> "$GITHUB_STEP_SUMMARY"
+              echo "- SimpleKiss-BungeeCord.jar" >> "$GITHUB_STEP_SUMMARY"
+              echo "- SimpleKiss-Velocity.jar" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+          esac
