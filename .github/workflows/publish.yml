@@ -1,0 +1,151 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Modrinth release type
+        required: true
+        default: release
+        type: choice
+        options:
+          - release
+          - beta
+          - alpha
+      version_number:
+        description: Version number to publish
+        required: false
+        default: ''
+        type: string
+      version_title:
+        description: Version title/subtitle
+        required: false
+        default: ''
+        type: string
+      changelog:
+        description: Version changelog
+        required: false
+        default: ''
+        type: string
+  push:
+    branches: [ main, master ]
+
+env:
+  MODRINTH_RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'release' }}
+  MODRINTH_VERSION_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.version_number || '' }}
+  MODRINTH_VERSION_TITLE: ${{ github.event_name == 'workflow_dispatch' && inputs.version_title || '' }}
+  MODRINTH_CHANGELOG: ${{ github.event_name == 'workflow_dispatch' && inputs.changelog || '' }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Read version
+        run: echo "PROJECT_VERSION=$(./gradlew properties -q | awk '/^version:/ {print $2}')" >> "$GITHUB_ENV"
+
+      - name: Generate Modrinth metadata
+        id: metadata
+        shell: bash
+        run: |
+          RELEASE_TYPE="${{ github.event_name == 'workflow_dispatch' && inputs.release_type || '' }}"
+          if [ -z "$RELEASE_TYPE" ]; then
+            BRANCH_NAME="${GITHUB_REF_NAME}"
+            case "$BRANCH_NAME" in
+              alpha|nightly|dev*) RELEASE_TYPE="alpha" ;;
+              beta|preview|rc*) RELEASE_TYPE="beta" ;;
+              *) RELEASE_TYPE="release" ;;
+            esac
+          fi
+
+          VERSION_NUMBER="${PROJECT_VERSION}"
+          if [ "$RELEASE_TYPE" != "release" ]; then
+            VERSION_NUMBER="${VERSION_NUMBER}-${RELEASE_TYPE}"
+          fi
+
+          COMMIT_MESSAGE="$(git log -1 --pretty=format:%s HEAD 2>/dev/null || true)"
+          COMMIT_BODY="$(git log -1 --pretty=format:%b HEAD 2>/dev/null || true)"
+
+          if [ -n "$COMMIT_MESSAGE" ]; then
+            CHANGELOG="- $COMMIT_MESSAGE"
+            if [ -n "$COMMIT_BODY" ]; then
+              CHANGELOG="$CHANGELOG
+$COMMIT_BODY"
+            fi
+          else
+            CHANGELOG="- Automated release from GitHub Actions"
+          fi
+
+          echo "release_type=$RELEASE_TYPE" >> "$GITHUB_OUTPUT"
+          echo "version_number=$VERSION_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "spigot_title=SimpleKiss Spigot ${VERSION_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "bungee_title=SimpleKiss BungeeCord ${VERSION_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "velocity_title=SimpleKiss Velocity ${VERSION_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Build all platforms
+        run: ./gradlew clean build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-platform-jars
+          if-no-files-found: error
+          path: |
+            target/SimpleKiss-Spigot.jar
+            target/SimpleKiss-BungeeCord.jar
+            target/SimpleKiss-Velocity.jar
+
+      - name: Publish Spigot to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_SPIGOT_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-Spigot.jar
+          name: ${{ steps.metadata.outputs.spigot_title }}
+          version: ${{ steps.metadata.outputs.version_number }}
+          version-type: ${{ steps.metadata.outputs.release_type }}
+          changelog: ${{ steps.metadata.outputs.changelog }}
+          loaders: paper
+          game-versions: 1.21
+
+      - name: Publish BungeeCord to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_BUNGEECORD_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-BungeeCord.jar
+          name: ${{ steps.metadata.outputs.bungee_title }}
+          version: ${{ steps.metadata.outputs.version_number }}
+          version-type: ${{ steps.metadata.outputs.release_type }}
+          changelog: ${{ steps.metadata.outputs.changelog }}
+          loaders: bungeecord
+
+      - name: Publish Velocity to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_VELOCITY_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: target/SimpleKiss-Velocity.jar
+          name: ${{ steps.metadata.outputs.velocity_title }}
+          version: ${{ steps.metadata.outputs.version_number }}
+          version-type: ${{ steps.metadata.outputs.release_type }}
+          changelog: ${{ steps.metadata.outputs.changelog }}
+          loaders: velocity

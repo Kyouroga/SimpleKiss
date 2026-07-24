@@ -63,7 +63,7 @@ particles:
 
 ## Building
 
-Use the included wrapper from the project root:
+Use the included Gradle wrapper from the project root:
 
 ```bash
 ./gradlew clean build
@@ -75,7 +75,24 @@ On Windows PowerShell:
 .\gradlew.bat clean build
 ```
 
-The build places the release jars in `target/`:
+The build outputs the release jars to `target/`:
+
+## Gradle and Java Compiler
+
+Full build notes are in [docs/GRADLE.md](docs/GRADLE.md).
+
+This project uses Gradle and needs Java 25 to compile.
+
+Build targets:
+
+```bash
+./gradlew :bukkit:build
+./gradlew :bungee:build
+./gradlew :velocity:build
+./gradlew clean build
+```
+
+Use the single-platform commands when you only need one server type built.
 
 ```text
 target/
@@ -97,6 +114,32 @@ bungee/      BungeeCord compatibility layer
 velocity/    Velocity compatibility layer
 target/      Platform jars copied by the root build
 ```
+
+## Development and Contributions
+
+Contributors can build and test the project locally with:
+
+```bash
+./gradlew test
+./gradlew clean build
+```
+
+Use these commands before opening a pull request. The build should complete successfully and the tests should pass.
+
+The repository includes separate workflows for:
+
+- building and uploading artifacts on pushes
+- validating pull requests
+- publishing releases to Modrinth
+
+Maintainers with repository access can configure the required GitHub Actions secrets for publishing. Those secrets are not documented here for contributors.
+
+## Documentation
+
+Additional project documentation lives in the docs folder:
+
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
 
 ## License
 
