@@ -103,15 +103,26 @@ $COMMIT_BODY"
       - name: Build all platforms
         run: ./gradlew clean build
 
-      - name: Upload artifacts
+      - name: Upload Spigot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleKiss-platform-jars
+          name: SimpleKiss-Spigot.jar
           if-no-files-found: error
-          path: |
-            target/SimpleKiss-Spigot.jar
-            target/SimpleKiss-BungeeCord.jar
-            target/SimpleKiss-Velocity.jar
+          path: bukkit/build/libs/SimpleKiss-Spigot.jar
+
+      - name: Upload BungeeCord artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-BungeeCord.jar
+          if-no-files-found: error
+          path: bungee/build/libs/SimpleKiss-BungeeCord.jar
+
+      - name: Upload Velocity artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-Velocity.jar
+          if-no-files-found: error
+          path: velocity/build/libs/SimpleKiss-Velocity.jar
 
       - name: Publish Spigot to Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
@@ -143,7 +154,7 @@ $COMMIT_BODY"
         with:
           modrinth-id: ${{ secrets.MODRINTH_VELOCITY_PROJECT_ID }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: target/SimpleKiss-Velocity.jar
+          files: velocity/build/libs/SimpleKiss-Velocity.jar
           name: ${{ steps.metadata.outputs.velocity_title }}
           version: ${{ steps.metadata.outputs.version_number }}
           version-type: ${{ steps.metadata.outputs.release_type }}

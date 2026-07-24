@@ -25,69 +25,46 @@ jobs:
       - name: Read version
         run: echo "PROJECT_VERSION=$(./gradlew properties -q | awk '/^version:/ {print $2}')" >> "$GITHUB_ENV"
 
-      - name: Build Spigot
-        run: |
-          ./gradlew :bukkit:build
-          mkdir -p target
-          cp bukkit/build/libs/SimpleKiss-Spigot.jar target/SimpleKiss-Spigot.jar
-
-      - name: Build BungeeCord
-        run: |
-          ./gradlew :bungee:build
-          mkdir -p target
-          cp bungee/build/libs/SimpleKiss-BungeeCord.jar target/SimpleKiss-BungeeCord.jar
-
-      - name: Build Velocity
-        run: |
-          ./gradlew :velocity:build
-          mkdir -p target
-          cp velocity/build/libs/SimpleKiss-Velocity.jar target/SimpleKiss-Velocity.jar
-
       - name: Build all platforms
         run: ./gradlew clean build
 
       - name: Upload Spigot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleKiss-spigot-jar
+          name: SimpleKiss-Spigot.jar
           if-no-files-found: error
-          path: target/SimpleKiss-Spigot.jar
+          path: bukkit/build/libs/SimpleKiss-Spigot.jar
 
       - name: Upload BungeeCord artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleKiss-bungeecord-jar
+          name: SimpleKiss-BungeeCord.jar
           if-no-files-found: error
-          path: target/SimpleKiss-BungeeCord.jar
+          path: bungee/build/libs/SimpleKiss-BungeeCord.jar
 
       - name: Upload Velocity artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SimpleKiss-velocity-jar
+          name: SimpleKiss-Velocity.jar
           if-no-files-found: error
-          path: target/SimpleKiss-Velocity.jar
-
-      - name: Upload platform artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: SimpleKiss-platform-jars
-          if-no-files-found: error
-          path: |
-            target/SimpleKiss-Spigot.jar
-            target/SimpleKiss-BungeeCord.jar
-            target/SimpleKiss-Velocity.jar
+          path: velocity/build/libs/SimpleKiss-Velocity.jar
 
       - name: Build summary
         if: always()
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          Build Summary
+          ARTIFACTS_URL="https://${GITHUB_SERVER_URL#https://}/${GITHUB_REPOSITORY}/suites/${GITHUB_RUN_ID}/artifacts"
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Build Summary
 
-          - Trigger: push
-          - Version: ${{ env.PROJECT_VERSION }}
+          | Item | Value |
+          | --- | --- |
+          | Trigger | push |
+          | Version | ${{ env.PROJECT_VERSION }} |
+          | Artifacts | [Download artifacts](${ARTIFACTS_URL}) |
 
-          Artifacts:
-          - SimpleKiss-Spigot.jar
-          - SimpleKiss-BungeeCord.jar
-          - SimpleKiss-Velocity.jar
+          | Artifact | Download |
+          | --- | --- |
+          | SimpleKiss-Spigot.jar | [Download](${ARTIFACTS_URL}) |
+          | SimpleKiss-BungeeCord.jar | [Download](${ARTIFACTS_URL}) |
+          | SimpleKiss-Velocity.jar | [Download](${ARTIFACTS_URL}) |
           EOF

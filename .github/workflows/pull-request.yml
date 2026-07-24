@@ -25,30 +25,49 @@ jobs:
       - name: Run tests and build
         run: ./gradlew clean test build
 
-      - name: Upload artifacts
+      - name: Upload Spigot artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: simplekiss-pr-artifacts
+          name: SimpleKiss-Spigot.jar
           if-no-files-found: error
           retention-days: 2
-          path: |
-            target/SimpleKiss-Spigot.jar
-            target/SimpleKiss-BungeeCord.jar
-            target/SimpleKiss-Velocity.jar
+          path: bukkit/build/libs/SimpleKiss-Spigot.jar
+
+      - name: Upload BungeeCord artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-BungeeCord.jar
+          if-no-files-found: error
+          retention-days: 2
+          path: bungee/build/libs/SimpleKiss-BungeeCord.jar
+
+      - name: Upload Velocity artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleKiss-Velocity.jar
+          if-no-files-found: error
+          retention-days: 2
+          path: velocity/build/libs/SimpleKiss-Velocity.jar
 
       - name: Build summary
         if: always()
         run: |
+          ARTIFACTS_URL="https://${GITHUB_SERVER_URL#https://}/${GITHUB_REPOSITORY}/suites/${GITHUB_RUN_ID}/artifacts"
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
-          Pull Request Build Summary
+          ## Pull Request Build Summary
 
-          - Trigger: pull request
-          - Validation: Gradle test and build
-          - Artifacts: simplekiss-pr-artifacts
+          | Item | Value |
+          | --- | --- |
+          | Trigger | pull_request |
+          | Validation | Gradle test and build |
+          | Artifacts | [Download artifacts](${ARTIFACTS_URL}) |
 
-          Downloadable outputs:
-          - SimpleKiss-Spigot.jar
-          - SimpleKiss-BungeeCord.jar
-          - SimpleKiss-Velocity.jar
+          | Artifact | Download |
+          | --- | --- |
+          | SimpleKiss-Spigot.jar | [Download](${ARTIFACTS_URL}) |
+          | SimpleKiss-BungeeCord.jar | [Download](${ARTIFACTS_URL}) |
+          | SimpleKiss-Velocity.jar | [Download](${ARTIFACTS_URL}) |
           EOF
