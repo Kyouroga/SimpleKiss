@@ -1,6 +1,6 @@
 # SimpleKiss
 
-SimpleKiss is a Paper plugin for small, proximity-based kiss effects in Minecraft.
+SimpleKiss is a plugin for small, proximity-based kiss effects in Minecraft.
 Players sneak, look at another player, and hold the aim long enough to trigger heart particles.
 
 ## Features
@@ -16,7 +16,6 @@ Players sneak, look at another player, and hold the aim long enough to trigger h
 
 - Minecraft 1.21 or newer
 - Java 25
-- Paper or a Paper-compatible server
 
 The Gradle wrapper is included in the repository, so a separate Gradle installation is not required.
 
