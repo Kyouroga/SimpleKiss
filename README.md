@@ -1,21 +1,23 @@
 # SimpleKiss
 
-SimpleKiss is a plugin for small, proximity-based kiss effects in Minecraft.
-Players sneak, look at another player, and hold the aim long enough to trigger heart particles.
+SimpleKiss is a Minecraft plugin for small, proximity-based kiss effects.
+Players sneak, look at another player, and hold their aim long enough to trigger heart particles.
 
-## Features
+## Highlights
 
 - Configurable interaction distance and viewing angle
 - Charge time before an effect is triggered
 - Per-player cooldowns
 - Heart particles shown to the appropriate players
 - Permission-protected reload command
-- Shared code for Bukkit, BungeeCord, and Velocity compatibility modules
+- Shared code for Bukkit/Paper, BungeeCord, and Velocity compatibility modules
+- Optional Bedrock/Geyser/Floodgate compatibility checks for natural Bedrock-player interactions
+- Safer configuration handling that restores defaults when invalid values are detected
 
 ## Requirements
 
 - Minecraft 1.21 or newer
-- Java 25
+- A compatible JDK for building (JDK 21 or newer is recommended; the build uses the currently available Java runtime automatically)
 
 The Gradle wrapper is included in the repository, so a separate Gradle installation is not required.
 
@@ -76,11 +78,11 @@ On Windows PowerShell:
 
 The build outputs the release jars to `target/`:
 
-## Gradle and Java Compiler
+## Gradle and Java
 
 Full build notes are in [docs/GRADLE.md](docs/GRADLE.md).
 
-This project uses Gradle and needs Java 25 to compile.
+This project uses Gradle and follows the Java version available to the current Gradle runtime. In practice, a recent JDK 21+ installation is the expected baseline.
 
 Build targets:
 
@@ -124,14 +126,6 @@ Contributors can build and test the project locally with:
 ```
 
 Use these commands before opening a pull request. The build should complete successfully and the tests should pass.
-
-The repository includes separate workflows for:
-
-- building and uploading artifacts on pushes
-- validating pull requests
-- publishing releases to Modrinth
-
-Maintainers with repository access can configure the required GitHub Actions secrets for publishing. Those secrets are not documented here for contributors.
 
 ## Documentation
 

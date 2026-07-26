@@ -4,7 +4,7 @@ Thanks for helping improve SimpleKiss.
 
 ## Before You Start
 
-- Install Java 25.
+- Install a compatible JDK for building (JDK 21 or newer is recommended).
 - Use the Gradle wrapper from the repository root.
 - Keep changes focused and easy to review.
 
@@ -21,11 +21,11 @@ Thanks for helping improve SimpleKiss.
 
 4. Open a pull request with a short summary of the change and any relevant testing notes.
 
-## Gradle and Java Compiler
+## Gradle and Java
 
 Build details are in [GRADLE.md](GRADLE.md).
 
-The project uses Gradle and requires Java 25 to compile.
+The project uses Gradle and follows the Java version provided by the current Gradle runtime, so make sure your shell points to a recent JDK before running builds.
 
 ## Pull Requests
 

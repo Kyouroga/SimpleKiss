@@ -1,29 +1,19 @@
 # GitHub Workflows
 
-This repository uses GitHub Actions for build validation, artifact uploads, and release publishing.
+This repository previously used GitHub Actions for build validation, artifact uploads, and release publishing, but the workflow files are currently disabled for maintenance and local validation is the recommended path.
 
-## Workflows
+## Current Status
 
-### Build workflow
+- The workflow files are retained in the repository but are not actively used while maintenance work is in progress.
+- Local verification should be done with the Gradle wrapper:
 
-- File: .github/workflows/build.yml
-- Runs on pushes to the main branches.
-- Builds the project and uploads the generated platform jars as workflow artifacts.
-
-### Pull request workflow
-
-- File: .github/workflows/pull-request.yml
-- Runs for pull requests.
-- Validates the code by running the Gradle test and build steps.
-
-### Publish workflow
-
-- File: .github/workflows/publish.yml
-- Handles Modrinth publishing.
-- Uses the current project version and the latest commit message to populate the release metadata.
+```bash
+./gradlew test
+./gradlew clean build
+```
 
 ## Notes for Contributors
 
-- Contributors do not need to configure Modrinth secrets.
-- Maintainers with repository access are responsible for the GitHub Actions secrets used for publishing.
+- Contributors do not need to configure Modrinth secrets while the workflow automation is disabled.
+- Maintainers with repository access can re-enable the workflows later if publishing or CI automation is needed again.
 - If the build or release process changes, update this document to match.
