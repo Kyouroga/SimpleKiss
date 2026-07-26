@@ -31,6 +31,7 @@ public class KissTask extends BukkitRunnable {
     private final SimpleKissBridge plugin;
     private final KissManager manager;
     private final PlatformConfig config;
+    private final KissBedrock kissBedrock;
 
     /**
      * Creates the repeating task for a plugin instance.
@@ -39,6 +40,7 @@ public class KissTask extends BukkitRunnable {
         this.plugin = plugin;
         this.manager = manager;
         this.config = config;
+        this.kissBedrock = new KissBedrock();
     }
 
     @Override
@@ -56,7 +58,11 @@ public class KissTask extends BukkitRunnable {
                 continue;
             }
 
-            Player target = getTargetPlayer(p, maxDistance, maxAngle);
+            /**
+             * Bedrock players are treated with a slightly wider aiming cone so interaction feels natural.
+             */
+            boolean bedrockPlayer = kissBedrock.isBedrockPlayer(p);
+            Player target = getTargetPlayer(p, maxDistance, maxAngle, bedrockPlayer);
 
             if (target == null || !canPerformKiss(p, target)) {
                 manager.resetCharge(p);
@@ -131,14 +137,14 @@ public class KissTask extends BukkitRunnable {
         }
     }
 
-    private Player getTargetPlayer(Player p, double maxDistance, double maxAngle) {
+    private Player getTargetPlayer(Player p, double maxDistance, double maxAngle, boolean bedrockPlayer) {
         Location eye = p.getEyeLocation();
         Vector direction = eye.getDirection().normalize();
 
         Player best = null;
         double bestDistance = maxDistance;
 
-        // Select the nearest player inside the configured view cone.
+        // Select the nearest player inside the configured view cone, with a small tolerance for Bedrock players.
         for (Player other : p.getWorld().getPlayers()) {
             if (other == p) continue;
 
@@ -149,8 +155,9 @@ public class KissTask extends BukkitRunnable {
 
             Vector toTarget = head.toVector().subtract(eye.toVector()).normalize();
             double angle = direction.angle(toTarget);
+            double effectiveMaxAngle = bedrockPlayer ? Math.max(maxAngle, Math.toRadians(20.0)) : maxAngle;
 
-            if (angle > maxAngle) continue;
+            if (angle > effectiveMaxAngle) continue;
 
             best = other;
             bestDistance = distance;

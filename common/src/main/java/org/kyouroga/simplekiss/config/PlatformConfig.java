@@ -205,6 +205,17 @@ public final class PlatformConfig {
         return githubTagPrefix;
     }
 
+    /**
+     * Returns whether the current values would require a safe reset to defaults.
+     */
+    public boolean isInvalid() {
+        return distance <= 0
+                || chargeTime <= 0
+                || lookAngle < 1.0
+                || lookAngle > 90.0
+                || particleCount <= 0;
+    }
+
     public String formatMessage(String message) {
         return String.format(Locale.ROOT, "[%s] %s", platformName.toUpperCase(Locale.ROOT), message);
     }

@@ -155,12 +155,10 @@ class SimpleKissBridgeTest {
             return false;
         }
 
-        @Override
         public String namespace() {
             return "simplekiss";
         }
 
-        @Override
         public java.util.List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
             return java.util.Collections.emptyList();
         }
