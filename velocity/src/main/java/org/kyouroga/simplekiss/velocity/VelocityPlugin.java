@@ -17,6 +17,13 @@ package org.kyouroga.simplekiss.velocity;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.logging.Level;
+
 /**
  * Velocity compatibility-layer entry point.
  */
@@ -61,5 +68,32 @@ public final class VelocityPlugin {
      */
     public String status() {
         return config.formatMessage("Velocity compatibility layer active");
+    }
+
+    /**
+     * Restores the default Velocity configuration file when the current file is missing or invalid.
+     */
+    public void ensureDefaultConfig(File dataFolder) {
+        if (dataFolder == null) {
+            return;
+        }
+
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            return;
+        }
+
+        File configFile = new File(dataFolder, "config.yml");
+        if (configFile.exists() && configFile.length() > 0) {
+            return;
+        }
+
+        try (InputStream defaults = getClass().getClassLoader().getResourceAsStream("config.yml")) {
+            if (defaults == null) {
+                return;
+            }
+            Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to restore Velocity config.yml", exception);
+        }
     }
 }

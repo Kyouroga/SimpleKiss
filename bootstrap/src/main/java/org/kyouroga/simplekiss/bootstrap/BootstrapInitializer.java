@@ -17,8 +17,16 @@ package org.kyouroga.simplekiss.bootstrap;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.compat.UniversalEntry;
 import org.kyouroga.simplekiss.config.PlatformConfig;
+import org.kyouroga.simplekiss.service.KissBedrock;
 import org.kyouroga.simplekiss.service.KissManager;
 import org.kyouroga.simplekiss.service.KissTask;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.logging.Level;
 
 /**
  * Starts and reloads the shared SimpleKiss services for a platform plugin.
@@ -35,11 +43,23 @@ public final class BootstrapInitializer {
         PlatformConfig config = PlatformConfig.from(plugin);
         UniversalEntry universalEntry = new UniversalEntry(config);
 
+        if (config.isInvalid()) {
+            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            restoreDefaultConfig(plugin);
+            config = PlatformConfig.from(plugin);
+        }
+
         if (!universalEntry.validateSettings()) {
             plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; using safe defaults."));
         }
 
         plugin.getLogger().info(universalEntry.statusMessage());
+
+        /**
+         * Announce optional Geyser/Floodgate Bedrock support when the bridge APIs are present.
+         */
+        KissBedrock kissBedrock = new KissBedrock();
+        plugin.getLogger().info(config.formatMessage(kissBedrock.describeSupport()));
         plugin.getLogger().info(config.formatMessage("Starting SimpleKiss core services"));
 
         KissManager manager = new KissManager(plugin, config);
@@ -47,6 +67,30 @@ public final class BootstrapInitializer {
 
         plugin.getLogger().info(config.formatMessage("SimpleKiss bootstrap complete"));
         return manager;
+    }
+
+    /**
+     * Restores the bundled default configuration file when the current values are unsafe.
+     */
+    private static void restoreDefaultConfig(SimpleKissBridge plugin) {
+        File dataFolder = plugin.getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            plugin.getLogger().warning("Unable to create plugin data folder for config reset.");
+            return;
+        }
+
+        File configFile = new File(dataFolder, "config.yml");
+        try (InputStream defaults = plugin.getResource("config.yml")) {
+            if (defaults == null) {
+                plugin.getLogger().warning("No bundled config.yml found for reset operation.");
+                return;
+            }
+            Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            plugin.saveConfig();
+            plugin.reloadConfig();
+        } catch (IOException exception) {
+            plugin.getLogger().log(Level.WARNING, "Failed to reset config.yml to defaults", exception);
+        }
     }
 
     /**
@@ -58,6 +102,11 @@ public final class BootstrapInitializer {
         }
 
         plugin.getLogger().info(config.formatMessage("Reloading SimpleKiss plugin configuration"));
+        if (config.isInvalid()) {
+            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            restoreDefaultConfig(plugin);
+            config = PlatformConfig.from(plugin);
+        }
         KissManager manager = new KissManager(plugin, config);
         new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L);
         plugin.getLogger().info(config.formatMessage("SimpleKiss reload complete"));
