@@ -3,11 +3,11 @@ plugins {
 }
 
 group = 'org.kyouroga'
-version = '1.0.0'
+version = '1.1.0'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
