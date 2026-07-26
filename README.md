@@ -3,7 +3,7 @@
 SimpleKiss is a Minecraft plugin for small, proximity-based kiss effects.
 Players sneak, look at another player, and hold their aim long enough to trigger heart particles.
 
-## Highlights
+## Features
 
 - Configurable interaction distance and viewing angle.
 - Adjustable charge time before the effect is triggered.
