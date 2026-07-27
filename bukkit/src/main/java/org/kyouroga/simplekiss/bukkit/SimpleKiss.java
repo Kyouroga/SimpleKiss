@@ -21,17 +21,14 @@ import org.kyouroga.simplekiss.bootstrap.BootstrapInitializer;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.service.KissManager;
 
-/**
- * Bukkit entry point for SimpleKiss.
- */
 public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
     private KissManager manager;
 
-    @Override
     /**
      * Loads the default configuration, starts shared services, and registers commands.
      */
+    @Override
     public void onEnable() {
         saveDefaultConfig();
 
@@ -39,9 +36,6 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
         registerCommands();
     }
 
-    /**
-     * Connects the /spkiss command to its executor and tab completer.
-     */
     private void registerCommands() {
         PluginCommand command = getCommand("spkiss");
         if (command != null) {
@@ -51,6 +45,9 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
         }
     }
 
+    /**
+     * Reloads the Bukkit configuration and restarts the shared services.
+     */
     void reloadPluginConfig(org.bukkit.command.CommandSender sender) {
         reloadConfig();
         PlatformConfig config = PlatformConfig.from(this);
@@ -61,15 +58,15 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
     }
 
     @Override
-    /**
-     * Logs shutdown when the shared manager has been initialized.
-     */
     public void onDisable() {
         if (manager != null) {
             getLogger().info("SimpleKiss shutting down cleanly");
         }
     }
 
+    /**
+     * Returns the manager that tracks player charge and cooldown state.
+     */
     public KissManager getManager() {
         return manager;
     }

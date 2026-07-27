@@ -23,9 +23,6 @@ import org.bukkit.util.Vector;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 
-/**
- * Checks eligible players each server tick and triggers kiss particles when a charge completes.
- */
 public class KissTask extends BukkitRunnable {
 
     private final SimpleKissBridge plugin;
@@ -33,9 +30,6 @@ public class KissTask extends BukkitRunnable {
     private final PlatformConfig config;
     private final KissBedrock kissBedrock;
 
-    /**
-     * Creates the repeating task for a plugin instance.
-     */
     public KissTask(SimpleKissBridge plugin, KissManager manager, PlatformConfig config) {
         this.plugin = plugin;
         this.manager = manager;
@@ -43,6 +37,9 @@ public class KissTask extends BukkitRunnable {
         this.kissBedrock = new KissBedrock();
     }
 
+    /**
+     * Advances charging players and triggers completed kisses.
+     */
     @Override
     public void run() {
 
@@ -83,6 +80,9 @@ public class KissTask extends BukkitRunnable {
         }
     }
 
+    /**
+     * Checks whether both players are eligible to perform a kiss.
+     */
     private boolean canPerformKiss(Player p, Player target) {
         if (p.getGameMode() == GameMode.SPECTATOR || target.getGameMode() == GameMode.SPECTATOR) {
             return false;
@@ -99,6 +99,9 @@ public class KissTask extends BukkitRunnable {
         return canSeeEachOther;
     }
 
+    /**
+     * Shows the kiss effect for the target and, when reciprocated, the initiator.
+     */
     private void triggerKiss(Player p, Player target) {
         boolean bothHidden = p.isInvisible() && target.isInvisible();
 
@@ -109,6 +112,9 @@ public class KissTask extends BukkitRunnable {
         }
     }
 
+    /**
+     * Spawns heart particles for the player, optionally limiting who can see them.
+     */
     private void spawnHearts(Player player, Player[] viewers) {
         Location loc = player.getLocation().add(0, 1.6, 0);
 
@@ -137,6 +143,9 @@ public class KissTask extends BukkitRunnable {
         }
     }
 
+    /**
+     * Finds the nearest player inside the initiator's allowed view cone.
+     */
     private Player getTargetPlayer(Player p, double maxDistance, double maxAngle, boolean bedrockPlayer) {
         Location eye = p.getEyeLocation();
         Vector direction = eye.getDirection().normalize();

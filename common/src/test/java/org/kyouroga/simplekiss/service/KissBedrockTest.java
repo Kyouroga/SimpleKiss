@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KissBedrockTest {
 
+    /**
+     * Verifies that the support description names the available Bedrock bridges.
+     */
     @Test
     void describeSupportIncludesBedrockAndBridgeInformation() {
         KissBedrock support = new KissBedrock();
@@ -33,6 +36,9 @@ class KissBedrockTest {
         assertTrue(description.contains("Geyser") || description.contains("Floodgate") || description.contains("No"));
     }
 
+    /**
+     * Verifies that a missing player is never treated as a Bedrock player.
+     */
     @Test
     void nullPlayerIsNeverReportedAsBedrock() {
         KissBedrock support = new KissBedrock();
@@ -40,6 +46,9 @@ class KissBedrockTest {
         assertFalse(support.isBedrockPlayer(null));
     }
 
+    /**
+     * Verifies that player-like objects can be inspected without Bukkit classes.
+     */
     @Test
     void genericPlayerObjectCanBeInspectedWithoutBukkitTypes() {
         KissBedrock support = new KissBedrock();
@@ -51,10 +60,12 @@ class KissBedrockTest {
     private static final class TestPlayer {
         private final UUID uniqueId;
 
+        /** Creates a player-like object with the supplied UUID. */
         private TestPlayer(UUID uniqueId) {
             this.uniqueId = uniqueId;
         }
 
+        /** Returns the UUID exposed to the Bedrock detector. */
         public UUID getUniqueId() {
             return uniqueId;
         }

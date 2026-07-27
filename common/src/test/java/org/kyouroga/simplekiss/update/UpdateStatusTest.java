@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UpdateStatusTest {
 
+    /**
+     * Verifies that the empty status contains no update details.
+     */
     @Test
     void noneReturnsEmptyUpdateState() {
         UpdateStatus status = UpdateStatus.none();
@@ -33,6 +36,9 @@ class UpdateStatusTest {
         assertEquals("", status.getRepoUrl());
     }
 
+    /**
+     * Verifies that an update status retains its supplied details.
+     */
     @Test
     void storesUpdateDetails() {
         UpdateStatus status = new UpdateStatus(true, 2, "v1.2.0", "main", "https://example.com/repo");

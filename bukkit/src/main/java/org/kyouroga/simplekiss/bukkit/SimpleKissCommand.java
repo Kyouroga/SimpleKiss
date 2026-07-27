@@ -23,23 +23,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Handles the administrative /spkiss command.
- */
 public final class SimpleKissCommand implements CommandExecutor, TabCompleter {
     private final SimpleKiss plugin;
 
-    /**
-     * Creates a command handler for the Bukkit plugin.
-     */
     public SimpleKissCommand(SimpleKiss plugin) {
         this.plugin = plugin;
     }
 
-    @Override
     /**
      * Handles reload after checking the sender's permission.
      */
+    @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1 && "reload".equalsIgnoreCase(args[0])) {
             if (!sender.hasPermission("simplekiss.reload")) {
@@ -55,10 +49,10 @@ public final class SimpleKissCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    @Override
     /**
      * Suggests reload only to senders allowed to use it.
      */
+    @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1 && sender.hasPermission("simplekiss.reload")) {
             List<String> suggestions = new ArrayList<>();

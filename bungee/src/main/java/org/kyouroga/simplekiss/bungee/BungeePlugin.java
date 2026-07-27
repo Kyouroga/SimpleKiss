@@ -25,9 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 
-/**
- * BungeeCord entry point for the compatibility layer.
- */
 public final class BungeePlugin extends Plugin {
     private final PlatformConfig config;
 
@@ -46,9 +43,6 @@ public final class BungeePlugin extends Plugin {
     }
 
     @Override
-    /**
-     * Announces that the BungeeCord compatibility layer is active.
-     */
     public void onEnable() {
         if (config != null) {
             ensureDefaultConfig();

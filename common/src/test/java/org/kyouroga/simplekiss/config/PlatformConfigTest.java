@@ -25,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlatformConfigTest {
 
+    /**
+     * Verifies that nested values are read while absent values use defaults.
+     */
     @Test
     void fromMapUsesNestedConfigValuesAndDefaults() {
         Map<String, Object> config = new LinkedHashMap<>();
@@ -56,6 +59,9 @@ class PlatformConfigTest {
         assertEquals("KyourOga", platformConfig.getGithubOwner());
     }
 
+    /**
+     * Verifies that formatted messages include an uppercase platform prefix.
+     */
     @Test
     void formatMessageUsesUppercasePlatformName() {
         PlatformConfig platformConfig = new PlatformConfig(

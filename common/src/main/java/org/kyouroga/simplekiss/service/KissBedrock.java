@@ -18,9 +18,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-/**
- * Detects Geyser and Floodgate Bedrock players without hard-coding a runtime dependency.
- */
 public final class KissBedrock {
 
     /**
@@ -51,6 +48,9 @@ public final class KissBedrock {
         return "Bedrock support: Geyser/Floodgate detection enabled via optional bridge APIs";
     }
 
+    /**
+     * Reads a UUID from the player object using common platform accessor names.
+     */
     private UUID resolveUniqueId(Object player) {
         try {
             Method method = player.getClass().getMethod("getUniqueId");
@@ -75,16 +75,25 @@ public final class KissBedrock {
         return null;
     }
 
+    /**
+     * Checks Floodgate for the supplied player UUID when its API is available.
+     */
     private boolean isFloodgatePlayer(UUID uniqueId) {
         return invokeBridgeCheck("org.geysermc.floodgate.api.FloodgateApi", uniqueId,
                 "isFloodgatePlayer", "isBedrockPlayer");
     }
 
+    /**
+     * Checks Geyser for the supplied player UUID when its API is available.
+     */
     private boolean isGeyserPlayer(UUID uniqueId) {
         return invokeBridgeCheck("org.geysermc.geyser.api.GeyserApi", uniqueId,
                 "isBedrockPlayer", "isFloodgatePlayer");
     }
 
+    /**
+     * Invokes a Bedrock-player check from an optional bridge API.
+     */
     private boolean invokeBridgeCheck(String className, UUID uniqueId, String primaryMethod, String fallbackMethod) {
         try {
             Class<?> apiClass = Class.forName(className);
@@ -108,6 +117,9 @@ public final class KissBedrock {
         }
     }
 
+    /**
+     * Obtains an API instance through the accessor exposed by a bridge implementation.
+     */
     private Object invokeStaticAccessor(Class<?> apiClass) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         try {
             Method instanceMethod = apiClass.getMethod("getInstance");
@@ -126,6 +138,9 @@ public final class KissBedrock {
         }
     }
 
+    /**
+     * Looks up a public API method and returns {@code null} when it is unavailable.
+     */
     private Method findMethod(Class<?> apiClass, String methodName, Class<?> parameterType) throws NoSuchMethodException {
         try {
             return apiClass.getMethod(methodName, parameterType);

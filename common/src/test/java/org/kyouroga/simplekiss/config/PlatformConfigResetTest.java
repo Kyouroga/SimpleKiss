@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlatformConfigResetTest {
 
+    /**
+     * Verifies that unsafe configuration values require a reset.
+     */
     @Test
     void invalidValuesAreDetected() {
         Map<String, Object> config = new LinkedHashMap<>();

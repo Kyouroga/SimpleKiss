@@ -24,9 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 
-/**
- * Velocity compatibility-layer entry point.
- */
 public final class VelocityPlugin {
     private final PlatformConfig config;
 
@@ -49,9 +46,6 @@ public final class VelocityPlugin {
                 && proxyServer.getVersion().getVersion().startsWith("4.");
     }
 
-    /**
-     * Formats the detected proxy version for a status message.
-     */
     public String describeServer(ProxyServer proxyServer) {
         if (proxyServer == null) {
             return config.formatMessage("Velocity server unavailable");
@@ -63,9 +57,6 @@ public final class VelocityPlugin {
                 + proxyServer.getVersion().getVersion());
     }
 
-    /**
-     * Returns the standard compatibility-layer status message.
-     */
     public String status() {
         return config.formatMessage("Velocity compatibility layer active");
     }

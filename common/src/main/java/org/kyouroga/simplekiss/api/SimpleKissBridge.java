@@ -21,23 +21,14 @@ import org.bukkit.plugin.Plugin;
  */
 public interface SimpleKissBridge extends Plugin {
 
-    /**
-     * Returns the name used in user-facing log messages.
-     */
     default String getDisplayName() {
         return getName();
     }
 
-    /**
-     * Writes an informational message through the platform logger.
-     */
     default void logInfo(String message) {
         getLogger().info(message);
     }
 
-    /**
-     * Writes a warning message through the platform logger.
-     */
     default void logWarning(String message) {
         getLogger().warning(message);
     }
