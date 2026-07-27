@@ -27,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KissManagerTest {
 
+    /**
+     * Verifies that charge and cooldown state can be created and cleared.
+     */
     @Test
     void chargeAndCooldownLifecycleWorks() {
         SimpleKissBridge plugin = createPlugin();
@@ -64,6 +67,9 @@ class KissManagerTest {
         assertFalse(manager.isOnCooldown(player));
     }
 
+    /**
+     * Creates the minimal plugin proxy needed by the manager.
+     */
     private static SimpleKissBridge createPlugin() {
         return (SimpleKissBridge) Proxy.newProxyInstance(
                 SimpleKissBridge.class.getClassLoader(),
@@ -83,6 +89,7 @@ class KissManagerTest {
     private static final class TestPlayer implements KissManager.PlayerIdentity {
         private final UUID uniqueId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+        /** Returns the fixed UUID used by this test player. */
         @Override
         public UUID getUniqueId() {
             return uniqueId;

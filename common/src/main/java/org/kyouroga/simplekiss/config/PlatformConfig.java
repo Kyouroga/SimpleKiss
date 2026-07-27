@@ -69,9 +69,6 @@ public final class PlatformConfig {
         this.githubTagPrefix = githubTagPrefix;
     }
 
-    /**
-     * Reads configuration values from a Bukkit plugin.
-     */
     public static PlatformConfig from(Plugin plugin) {
         FileConfiguration config = plugin.getConfig();
         return fromMap(plugin.getName(), config.getValues(true));
@@ -98,6 +95,9 @@ public final class PlatformConfig {
         );
     }
 
+    /**
+     * Reads a boolean setting or returns the supplied default when it is absent or invalid.
+     */
     private static boolean getBoolean(Map<String, Object> config, String path, boolean defaultValue) {
         Object value = getValue(config, path);
         if (value instanceof Boolean) {
@@ -106,6 +106,9 @@ public final class PlatformConfig {
         return defaultValue;
     }
 
+    /**
+     * Reads a string setting or returns the supplied default when it is absent or invalid.
+     */
     private static String getString(Map<String, Object> config, String path, String defaultValue) {
         Object value = getValue(config, path);
         if (value instanceof String) {
@@ -114,6 +117,9 @@ public final class PlatformConfig {
         return defaultValue;
     }
 
+    /**
+     * Reads an integer setting or returns the supplied default when it is absent or invalid.
+     */
     private static int getInt(Map<String, Object> config, String path, int defaultValue) {
         Object value = getValue(config, path);
         if (value instanceof Number) {
@@ -122,6 +128,9 @@ public final class PlatformConfig {
         return defaultValue;
     }
 
+    /**
+     * Reads a long setting or returns the supplied default when it is absent or invalid.
+     */
     private static long getLong(Map<String, Object> config, String path, long defaultValue) {
         Object value = getValue(config, path);
         if (value instanceof Number) {
@@ -130,6 +139,9 @@ public final class PlatformConfig {
         return defaultValue;
     }
 
+    /**
+     * Reads a decimal setting or returns the supplied default when it is absent or invalid.
+     */
     private static double getDouble(Map<String, Object> config, String path, double defaultValue) {
         Object value = getValue(config, path);
         if (value instanceof Number) {
@@ -139,6 +151,9 @@ public final class PlatformConfig {
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * Finds a value in a nested configuration map using a dot-separated path.
+     */
     private static Object getValue(Map<String, Object> config, String path) {
         String[] parts = path.split("\\.");
         Map<String, Object> current = config;
@@ -153,58 +168,85 @@ public final class PlatformConfig {
         return current.get(parts[parts.length - 1]);
     }
 
+    /** Returns the platform name used in messages. */
     public String getPlatformName() {
         return platformName;
     }
 
+    /** Returns the maximum distance allowed between players. */
     public double getDistance() {
         return distance;
     }
 
+    /** Returns the number of ticks needed to charge a kiss. */
     public int getChargeTime() {
         return chargeTime;
     }
 
+    /** Returns the maximum angle a player may look away from a target. */
     public double getLookAngle() {
         return lookAngle;
     }
 
+    /** Returns the cooldown length in server ticks. */
     public long getCooldownTicks() {
         return cooldownTicks;
     }
 
+    /** Returns the number of heart particles to show. */
     public int getParticleCount() {
         return particleCount;
     }
 
+    /** Returns the particle spread around the target. */
     public double getParticleOffset() {
         return particleOffset;
     }
 
+    /** Returns whether update checks are enabled. */
     public boolean isUpdateCheckEnabled() {
         return updateCheckEnabled;
     }
 
+    /** Returns the permission required to receive update notices. */
     public String getUpdateNotifyPermission() {
         return updateNotifyPermission;
     }
 
+    /** Returns the GitHub repository owner used for update checks. */
     public String getGithubOwner() {
         return githubOwner;
     }
 
+    /** Returns the GitHub repository name used for update checks. */
     public String getGithubRepo() {
         return githubRepo;
     }
 
+    /** Returns the branch compared during update checks. */
     public String getGithubBranch() {
         return githubBranch;
     }
 
+    /** Returns the prefix expected on release tags. */
     public String getGithubTagPrefix() {
         return githubTagPrefix;
     }
 
+    /**
+     * Returns whether the current values would require a safe reset to defaults.
+     */
+    public boolean isInvalid() {
+        return distance <= 0
+                || chargeTime <= 0
+                || lookAngle < 1.0
+                || lookAngle > 90.0
+                || particleCount <= 0;
+    }
+
+    /**
+     * Adds the uppercase platform name to a user-facing message.
+     */
     public String formatMessage(String message) {
         return String.format(Locale.ROOT, "[%s] %s", platformName.toUpperCase(Locale.ROOT), message);
     }

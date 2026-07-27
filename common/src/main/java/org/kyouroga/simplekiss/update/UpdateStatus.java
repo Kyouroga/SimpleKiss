@@ -23,10 +23,7 @@ public final class UpdateStatus {
     private final String currentTag;
     private final String targetBranch;
     private final String repoUrl;
-
-    /**
-     * Creates an update result.
-     */
+    
     public UpdateStatus(boolean updateAvailable, int behindBy, String currentTag, String targetBranch, String repoUrl) {
         this.updateAvailable = updateAvailable;
         this.behindBy = behindBy;
@@ -42,22 +39,27 @@ public final class UpdateStatus {
         return new UpdateStatus(false, 0, "", "", "");
     }
 
+    /** Returns whether a newer version is available. */
     public boolean isUpdateAvailable() {
         return updateAvailable;
     }
 
+    /** Returns how many commits the running version is behind. */
     public int getBehindBy() {
         return behindBy;
     }
 
+    /** Returns the current release tag. */
     public String getCurrentTag() {
         return currentTag;
     }
 
+    /** Returns the branch used for the comparison. */
     public String getTargetBranch() {
         return targetBranch;
     }
 
+    /** Returns the repository URL for the update source. */
     public String getRepoUrl() {
         return repoUrl;
     }

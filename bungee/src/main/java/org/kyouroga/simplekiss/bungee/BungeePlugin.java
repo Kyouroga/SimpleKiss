@@ -18,9 +18,13 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 
-/**
- * BungeeCord entry point for the compatibility layer.
- */
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.logging.Level;
+
 public final class BungeePlugin extends Plugin {
     private final PlatformConfig config;
 
@@ -39,12 +43,36 @@ public final class BungeePlugin extends Plugin {
     }
 
     @Override
-    /**
-     * Announces that the BungeeCord compatibility layer is active.
-     */
     public void onEnable() {
         if (config != null) {
+            ensureDefaultConfig();
             getLogger().info(config.formatMessage("BungeeCord compatibility layer active"));
+        }
+    }
+
+    /**
+     * Creates or restores the bundled config.yml when the proxy configuration is missing or invalid.
+     */
+    private void ensureDefaultConfig() {
+        File dataFolder = getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            getLogger().warning("Unable to create BungeeCord data folder for config reset.");
+            return;
+        }
+
+        File configFile = new File(dataFolder, "config.yml");
+        if (configFile.exists() && configFile.length() > 0) {
+            return;
+        }
+
+        try (InputStream defaults = getResourceAsStream("config.yml")) {
+            if (defaults == null) {
+                getLogger().warning("No bundled BungeeCord config.yml found for reset operation.");
+                return;
+            }
+            Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException exception) {
+            getLogger().log(Level.WARNING, "Failed to restore BungeeCord config.yml to defaults", exception);
         }
     }
 

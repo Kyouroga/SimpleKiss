@@ -67,9 +67,6 @@ public class KissManager {
         chargeTicks.remove(p.getUniqueId());
     }
 
-    /**
-     * Clears all charge and cooldown state, normally during a reload.
-     */
     public void resetAll() {
         chargeTicks.clear();
         cooldowns.clear();
@@ -96,12 +93,11 @@ public class KissManager {
         cooldowns.put(p.getUniqueId(), System.currentTimeMillis());
     }
 
-    /**
-     * Minimal player identity required by the state manager.
-     */
     public interface PlayerIdentity {
+        /** Returns the stable UUID used to track this player. */
         UUID getUniqueId();
 
+        /** Creates an identity view for a Bukkit player. */
         static PlayerIdentity from(Player player) {
             return player::getUniqueId;
         }

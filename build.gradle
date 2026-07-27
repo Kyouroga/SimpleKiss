@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.bundling.Jar
 
 group = 'org.kyouroga'
-version = '1.0.0'
+version = '1.1.0'
 
 def artifactNames = [
     bukkit: 'SimpleKiss-Spigot',
@@ -22,15 +22,18 @@ subprojects {
         }
     }
 
+    def currentJava = JavaVersion.current()
+
     java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = currentJava
+        targetCompatibility = currentJava
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = JavaLanguageVersion.of(currentJava.majorVersion.toInteger())
         }
     }
 
     tasks.withType(JavaCompile).configureEach {
+        options.release = currentJava.majorVersion.toInteger()
         options.encoding = 'UTF-8'
     }
 

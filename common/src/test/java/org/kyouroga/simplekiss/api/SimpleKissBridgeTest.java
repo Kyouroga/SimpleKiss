@@ -37,6 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SimpleKissBridgeTest {
 
+    /**
+     * Verifies that the bridge delegates convenience methods to the plugin contract.
+     */
     @Test
     void bridgeExposesConvenienceMethods() {
         TestBridge bridge = new TestBridge();
@@ -48,11 +51,13 @@ class SimpleKissBridgeTest {
 
     @SuppressWarnings({"deprecation", "removal"})
     private static final class TestBridge implements SimpleKissBridge {
+        /** Returns the fixed plugin name used by the test bridge. */
         @Override
         public String getName() {
             return "TestBridge";
         }
 
+        /** Returns a logger dedicated to the test bridge. */
         @Override
         public Logger getLogger() {
             return Logger.getLogger("TestBridge");
@@ -155,12 +160,12 @@ class SimpleKissBridgeTest {
             return false;
         }
 
-        @Override
+        /** Returns the namespace used by this test plugin. */
         public String namespace() {
             return "simplekiss";
         }
 
-        @Override
+        /** Returns no tab-completion suggestions in the test bridge. */
         public java.util.List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
             return java.util.Collections.emptyList();
         }

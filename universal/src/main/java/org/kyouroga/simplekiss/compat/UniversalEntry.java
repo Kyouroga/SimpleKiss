@@ -16,9 +16,6 @@ package org.kyouroga.simplekiss.compat;
 
 import org.kyouroga.simplekiss.config.PlatformConfig;
 
-/**
- * Validates shared settings and reports compatibility-layer status.
- */
 public final class UniversalEntry {
     private final PlatformConfig config;
 
