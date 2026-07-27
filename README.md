@@ -3,16 +3,16 @@
 SimpleKiss is a Minecraft plugin for small, proximity-based kiss effects.
 Players sneak, look at another player, and hold their aim long enough to trigger heart particles.
 
-## Highlights
+## Features
 
-- Configurable interaction distance and viewing angle
-- Charge time before an effect is triggered
-- Per-player cooldowns
-- Heart particles shown to the appropriate players
-- Permission-protected reload command
-- Shared code for Bukkit/Paper, BungeeCord, and Velocity compatibility modules
-- Optional Bedrock/Geyser/Floodgate compatibility checks for natural Bedrock-player interactions
-- Safer configuration handling that restores defaults when invalid values are detected
+- Configurable interaction distance and viewing angle.
+- Adjustable charge time before the effect is triggered.
+- Per-player cooldowns.
+- Heart particles shown only to the appropriate players.
+- Permission-protected reload command.
+- Shared codebase for Bukkit, BungeeCord, and Velocity compatibility modules.
+- Lightweight and optimized for performance.
+- Fully configurable through the configuration file.
 
 ## Requirements
 
@@ -129,10 +129,10 @@ Use these commands before opening a pull request. The build should complete succ
 
 ## Documentation
 
-Additional project documentation lives in the docs folder:
+Additional project documentation in the docs folder:
 
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
-- [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
+- [Contributing](docs/CONTRIBUTING.md)
+- [Workflows](docs/WORKFLOWS.md)
 
 ## License
 
