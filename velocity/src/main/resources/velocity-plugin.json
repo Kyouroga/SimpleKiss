@@ -2,9 +2,18 @@
   "id": "simplekiss",
   "name": "SimpleKiss",
   "version": "1.1.0",
-  "description": "A simple plugin that allows players to kiss each other in Minecraft.",
+  "description": "A proximity-based kiss effects in Minecraft.",
   "authors": [
     "kyouroga"
   ],
-  "main": "org.kyouroga.simplekiss.velocity.VelocityPlugin"
+  "main": "org.kyouroga.simplekiss.velocity.VelocityPlugin",
+  "apiVersion": 1.21,
+  "commands": {
+    "spkiss": {
+      "description": "SimpleKiss plugin commands",
+      "usage": "/<command> reload",
+      "permission": "simplekiss.reload",
+      "permission-message": "You do not have permission to reload SimpleKiss."
+    }
+  }
 }
