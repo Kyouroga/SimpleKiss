@@ -42,6 +42,10 @@ subprojects {
         archiveClassifier.set('')
         if (artifactNames.containsKey(project.name)) {
             archiveBaseName.set(artifactNames[project.name])
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from(project(':common').sourceSets.main.output)
+            from(project(':bootstrap').sourceSets.main.output)
+            from(project(':universal').sourceSets.main.output)
         }
     }
 }
@@ -61,10 +65,41 @@ tasks.register('copyArtifacts', Copy) {
     into rootProject.layout.projectDirectory.dir('target')
 }
 
+tasks.register('verifyPlatformJars') {
+    group = 'verification'
+    description = 'Verifies that built platform jars contain required shared API classes.'
+    dependsOn platformProjects.collect { it.tasks.named('jar') }
+
+    doLast {
+        def requiredEntries = [
+            'org/kyouroga/simplekiss/api/SimpleKissBridge.class',
+            'org/kyouroga/simplekiss/bootstrap/BootstrapInitializer.class'
+        ]
+
+        platformProjects.each { project ->
+            def jarFile = project.layout.buildDirectory.file("libs/${artifactNames[project.name]}.jar").get().asFile
+            if (!jarFile.exists()) {
+                throw new GradleException("Missing jar for platform project: ${project.name}")
+            }
+            def zip = new java.util.zip.ZipFile(jarFile)
+            try {
+                requiredEntries.each { entry ->
+                    if (zip.getEntry(entry) == null) {
+                        throw new GradleException("Jar verification failed for ${jarFile.name}: missing ${entry}")
+                    }
+                }
+            } finally {
+                zip.close()
+            }
+        }
+    }
+}
+
 tasks.register('build') {
     group = 'build'
     description = 'Builds all subprojects and copies their jars into the root target folder'
     dependsOn(subprojects.collect { it.tasks.named('build') })
+    dependsOn(tasks.named('verifyPlatformJars'))
     dependsOn(tasks.named('copyArtifacts'))
 }
 
