@@ -49,7 +49,15 @@ Use the command that matches the platform you want to build.
 ./gradlew clean build
 ```
 
-This builds the full project and writes the platform jars into the target folder.
+This builds the full project, packages Bukkit/Spigot, BungeeCord, and Velocity platform jars with shared runtime code included, and writes the resulting jars into the `target` folder.
+
+### Verify platform jar packaging
+
+```bash
+./gradlew clean verifyPlatformJars
+```
+
+This task builds the platform jars and checks that required shared classes (for `common`, `bootstrap`, and `universal`) are present in each generated plugin jar.
 
 ## Common Commands
 
