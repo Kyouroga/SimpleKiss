@@ -113,17 +113,18 @@ public class KissTask extends BukkitRunnable {
     }
 
     /**
-     * Spawns heart particles for the player, optionally limiting who can see them.
+     * Spawns the configured particle effect for the player, optionally limiting who can see it.
      */
     private void spawnHearts(Player player, Player[] viewers) {
         Location loc = player.getLocation().add(0, 1.6, 0);
 
         int count = config.getParticleCount();
         double offset = config.getParticleOffset();
+        Particle particle = resolveParticle(config.getParticleType());
 
         if (viewers == null) {
             player.getWorld().spawnParticle(
-                    Particle.HEART,
+                    particle,
                     loc,
                     count,
                     offset, offset, offset,
@@ -134,12 +135,23 @@ public class KissTask extends BukkitRunnable {
 
         for (Player viewer : viewers) {
             viewer.spawnParticle(
-                    Particle.HEART,
+                    particle,
                     loc,
                     count,
                     offset, offset, offset,
                     0.01
             );
+        }
+    }
+
+    /**
+     * Resolves a config particle name to a Bukkit particle. Invalid entries fall back to HEART.
+     */
+    private Particle resolveParticle(String configuredType) {
+        try {
+            return Particle.valueOf(configuredType);
+        } catch (IllegalArgumentException exception) {
+            return Particle.HEART;
         }
     }
 

@@ -39,6 +39,7 @@ class PlatformConfigTest {
         Map<String, Object> particles = new LinkedHashMap<>();
         particles.put("count", 7);
         particles.put("offset", 1.2);
+        particles.put("type", "minecraft:note");
         config.put("particles", particles);
 
         Map<String, Object> updateCheck = new LinkedHashMap<>();
@@ -54,6 +55,7 @@ class PlatformConfigTest {
         assertEquals(250L, platformConfig.getCooldownTicks());
         assertEquals(7, platformConfig.getParticleCount());
         assertEquals(1.2, platformConfig.getParticleOffset());
+        assertEquals("NOTE", platformConfig.getParticleType());
         assertFalse(platformConfig.isUpdateCheckEnabled());
         assertEquals("simplekiss.reload", platformConfig.getUpdateNotifyPermission());
         assertEquals("KyourOga", platformConfig.getGithubOwner());
@@ -72,6 +74,7 @@ class PlatformConfigTest {
                 100L,
                 10,
                 0.5,
+                "HEART",
                 true,
                 "simplekiss.reload",
                 "KyourOga",

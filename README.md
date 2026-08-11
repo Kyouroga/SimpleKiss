@@ -9,10 +9,6 @@ Players sneak, look at another player, and hold their aim long enough to trigger
 - Adjustable charge time before the effect is triggered.
 - Per-player cooldowns.
 - Heart particles shown only to the appropriate players.
-- Permission-protected reload command.
-- Shared codebase for Bukkit, BungeeCord, and Velocity compatibility modules.
-- Lightweight and optimized for performance.
-- Fully configurable through the configuration file.
 
 ## Requirements
 
@@ -49,9 +45,12 @@ cooldown: 100
 particles:
   count: 10
   offset: 0.5
+  type: HEART
 ```
 
 `charge-time` and `cooldown` use server ticks. There are 20 ticks in one second.
+
+You can set `particles.type` to any Bukkit particle enum name, including values like `HEART`, `NOTE`, `FIREWORKS_SPARK`, `COMPOSTER`, and `CHERRY_LEAVES`. You can also use the Minecraft-prefixed form such as `minecraft:note` or `minecraft:happy_villager`.
 
 | Setting | Description |
 | --- | --- |
@@ -59,8 +58,9 @@ particles:
 | `charge-time` | Number of valid ticks required before the kiss triggers. |
 | `look-angle` | Maximum angle between the player's view direction and the target. |
 | `cooldown` | Number of ticks before that player can trigger another kiss. |
-| `particles.count` | Number of heart particles spawned. |
+| `particles.count` | Number of particles spawned. |
 | `particles.offset` | Particle spread around the target's position. |
+| `particles.type` | Minecraft particle type used for the kiss effect. Any invalid type falls back to `HEART`. |
 
 ## Building
 
@@ -77,6 +77,13 @@ On Windows PowerShell:
 ```
 
 The build outputs the release jars to `target/`:
+
+```text
+target/
+├── CMSJSimpleKissBeta-Spigot.jar
+├── CMSJSimpleKissBeta-BungeeCord.jar
+└── CMSJSimpleKissBeta-Velocity.jar
+```
 
 ## Gradle and Java
 
@@ -97,9 +104,9 @@ Use the single-platform commands when you only need one server type built.
 
 ```text
 target/
-├── SimpleKiss-Spigot.jar
-├── SimpleKiss-BungeeCord.jar
-└── SimpleKiss-Velocity.jar
+├── CMSJSimpleKissBeta-Spigot.jar
+├── CMSJSimpleKissBeta-BungeeCord.jar
+└── CMSJSimpleKissBeta-Velocity.jar
 ```
 
 The `common`, `bootstrap`, and `universal` modules provide shared or internal code. They are not release jars.

@@ -31,6 +31,7 @@ public final class PlatformConfig {
     private final long cooldownTicks;
     private final int particleCount;
     private final double particleOffset;
+    private final String particleType;
     private final boolean updateCheckEnabled;
     private final String updateNotifyPermission;
     private final String githubOwner;
@@ -48,6 +49,7 @@ public final class PlatformConfig {
                           long cooldownTicks,
                           int particleCount,
                           double particleOffset,
+                          String particleType,
                           boolean updateCheckEnabled,
                           String updateNotifyPermission,
                           String githubOwner,
@@ -61,6 +63,7 @@ public final class PlatformConfig {
         this.cooldownTicks = cooldownTicks;
         this.particleCount = particleCount;
         this.particleOffset = particleOffset;
+        this.particleType = normalizeParticleType(particleType);
         this.updateCheckEnabled = updateCheckEnabled;
         this.updateNotifyPermission = updateNotifyPermission;
         this.githubOwner = githubOwner;
@@ -86,6 +89,7 @@ public final class PlatformConfig {
                 getLong(config, "cooldown", 100L),
                 getInt(config, "particles.count", 10),
                 getDouble(config, "particles.offset", 0.5),
+                getString(config, "particles.type", "HEART"),
                 getBoolean(config, "update-check.enabled", true),
                 getString(config, "update-check.notify-permission", "simplekiss.reload"),
                 getString(config, "update-check.github-owner", "KyourOga"),
@@ -150,6 +154,30 @@ public final class PlatformConfig {
         return defaultValue;
     }
 
+    /**
+     * Normalizes a particle name so it matches Bukkit's enum format.
+     */
+    public static String normalizeParticleType(String rawType) {
+        if (rawType == null) {
+            return "HEART";
+        }
+
+        String normalized = rawType.trim();
+        if (normalized.isEmpty()) {
+            return "HEART";
+        }
+
+        normalized = normalized.replace('-', '_').replace(' ', '_');
+        if (normalized.regionMatches(true, 0, "minecraft:", 0, "minecraft:".length())) {
+            normalized = normalized.substring("minecraft:".length());
+        }
+        if (normalized.isEmpty()) {
+            return "HEART";
+        }
+
+        return normalized.toUpperCase(Locale.ROOT);
+    }
+
     @SuppressWarnings("unchecked")
     /**
      * Finds a value in a nested configuration map using a dot-separated path.
@@ -201,6 +229,11 @@ public final class PlatformConfig {
     /** Returns the particle spread around the target. */
     public double getParticleOffset() {
         return particleOffset;
+    }
+
+    /** Returns the configured Minecraft particle type name. */
+    public String getParticleType() {
+        return particleType;
     }
 
     /** Returns whether update checks are enabled. */

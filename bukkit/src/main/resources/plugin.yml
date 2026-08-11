@@ -1,7 +1,7 @@
 name: SimpleKiss
 author: kyouroga
 description: A proximity-based kiss effects in Minecraft.
-version: 1.1.0
+version: CMSJBeta1.1.1
 main: org.kyouroga.simplekiss.bukkit.SimpleKiss
 api-version: 1.21
 commands:

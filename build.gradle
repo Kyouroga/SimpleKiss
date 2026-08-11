@@ -1,12 +1,14 @@
 import org.gradle.api.tasks.bundling.Jar
 
+apply plugin: 'base'
+
 group = 'org.kyouroga'
-version = '1.1.0'
+version = 'CMSJBeta1.1.1'
 
 def artifactNames = [
-    bukkit: 'SimpleKiss-Spigot',
-    bungee: 'SimpleKiss-BungeeCord',
-    velocity: 'SimpleKiss-Velocity'
+    bukkit: 'CMSJSimpleKissBeta-Spigot',
+    bungee: 'CMSJSimpleKissBeta-BungeeCord',
+    velocity: 'CMSJSimpleKissBeta-Velocity'
 ]
 
 subprojects {
@@ -95,7 +97,7 @@ tasks.register('verifyPlatformJars') {
     }
 }
 
-tasks.register('build') {
+tasks.named('build') {
     group = 'build'
     description = 'Builds all subprojects and copies their jars into the root target folder'
     dependsOn(subprojects.collect { it.tasks.named('build') })
@@ -103,7 +105,7 @@ tasks.register('build') {
     dependsOn(tasks.named('copyArtifacts'))
 }
 
-tasks.register('clean') {
+tasks.named('clean') {
     group = 'build'
     description = 'Cleans all subprojects and removes the root target folder'
     dependsOn(subprojects.collect { it.tasks.named('clean') })

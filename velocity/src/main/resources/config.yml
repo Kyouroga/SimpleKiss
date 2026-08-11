@@ -7,7 +7,10 @@ look-angle: 15.0
 # Number of server ticks before the same player can trigger another kiss.
 cooldown: 100
 particles:
-  # Number of heart particles to spawn.
+  # Number of particles to spawn.
   count: 10
   # Spread of the particles around the target location.
   offset: 0.5
+  # Particle type to use. Accepts Bukkit enum names such as HEART, NOTE, FIREWORKS_SPARK,
+  # or values like minecraft:note. Any invalid particle falls back to HEART.
+  type: HEART

@@ -41,6 +41,7 @@ class KissManagerTest {
                 5L,
                 10,
                 0.5,
+                "HEART",
                 true,
                 "simplekiss.reload",
                 "KyourOga",
