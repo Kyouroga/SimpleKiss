@@ -1,17 +1,18 @@
 # Gradle and Java
 
-This file covers the build setup for SimpleKiss.
+This covers the build setup for SimpleKiss.
 
 ## Requirements
 
 - A compatible JDK for building
 - The Gradle wrapper from this repository
 
-This project uses Gradle. You do not need to install Gradle separately.
+> [!NOTE]
+> This project uses Gradle. You do not need to install Gradle separately.
 
 ## Java Version
 
-SimpleKiss is configured to use the Java version that is available to the current Gradle runtime. In practice, a recent JDK 21 or newer installation is the expected baseline.
+Recent JDK 21 or newer installation is the expected baseline.
 
 If a build fails because of Java, make sure the correct JDK is selected in your shell before running Gradle. On most systems this means setting `JAVA_HOME` to the desired JDK installation.
 
@@ -19,7 +20,7 @@ If a build fails because of Java, make sure the correct JDK is selected in your 
 
 The project has separate modules for:
 
-- Bukkit / Paper
+- Bukkit / Spigot
 - BungeeCord
 - Velocity
 
@@ -79,8 +80,7 @@ On Windows PowerShell:
 
 The build produces the release jars for the supported platforms in the target folder.
 
-## Notes
-
-- Use the Gradle wrapper for this project.
-- If you need a specific Java version, point `JAVA_HOME` at that JDK before running Gradle.
-- Use the module-specific commands when you only need one platform built.
+> [!TIP]
+> Use the Gradle wrapper for this project.
+> If you need a specific Java version, point `JAVA_HOME` at that JDK before running Gradle.
+> Use the module-specific commands when you only need one platform built.
