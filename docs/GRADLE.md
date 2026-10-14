@@ -16,6 +16,16 @@ JDK 25 or newer is required only to build against the currently published Paper 
 
 If a build fails because of Java, make sure the correct JDK is selected in your shell before running Gradle. On most systems this means setting `JAVA_HOME` to the desired JDK installation.
 
+In Windows PowerShell, set `JAVA_HOME` to your JDK 25 installation before running the wrapper:
+
+Replace `C:\Path\To\JDK-25` below with the actual JDK installation directory on your computer. The directory should contain a `bin\java.exe` file; do not include `\bin` in `JAVA_HOME`.
+
+```powershell
+$env:JAVA_HOME = "C:\Path\To\JDK-25"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+.\gradlew.bat clean verifyPlatformJars
+```
+
 ## Build Targets
 
 The project has separate modules for:

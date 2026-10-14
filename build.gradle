@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.bundling.Jar
 
 group = 'org.kyouroga'
-version = '1.1.0'
+version = 'beta-1.0'
 
 def artifactNames = [
     bukkit: 'SimpleKiss-Spigot',
@@ -23,10 +23,13 @@ subprojects {
     }
 
     def currentJava = JavaVersion.current()
+    if (currentJava < JavaVersion.VERSION_25) {
+        throw new GradleException('Building against the Paper 26.3 API requires Gradle to run on JDK 25 or newer. Set JAVA_HOME to JDK 25 and rerun the build.')
+    }
 
     java {
-        sourceCompatibility = currentJava
-        targetCompatibility = currentJava
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
         toolchain {
             languageVersion = JavaLanguageVersion.of(currentJava.majorVersion.toInteger())
         }
@@ -36,7 +39,7 @@ subprojects {
         if (name.endsWith('Classpath')) {
             attributes.attribute(
                     org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
-                    currentJava.majorVersion.toInteger()
+                        currentJava.majorVersion.toInteger()
             )
         }
     }
