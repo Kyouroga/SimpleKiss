@@ -32,8 +32,17 @@ subprojects {
         }
     }
 
+    configurations.configureEach {
+        if (name.endsWith('Classpath')) {
+            attributes.attribute(
+                    org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                    currentJava.majorVersion.toInteger()
+            )
+        }
+    }
+
     tasks.withType(JavaCompile).configureEach {
-        options.release = currentJava.majorVersion.toInteger()
+        options.release = 21
         options.encoding = 'UTF-8'
     }
 

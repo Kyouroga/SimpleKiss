@@ -12,8 +12,9 @@ Players will sneak, look at the player, and hold their aim long enough to trigge
 
 ## Requirements
 
-- Minecraft 1.21 or newer
-- A compatible JDK for building (JDK 21 or newer is recommended; the build uses the currently available Java runtime automatically)
+- Minecraft Java Edition 1.21.x, 26.1.x, 26.2, or 26.3
+- To build from source: JDK 25 or newer, required by the currently published Paper 26.3 API
+- To run: use the Java runtime required by your Minecraft server version; the plugin is compiled to Java 21-compatible bytecode
 
 > [!NOTE]
 > The Gradle wrapper is included in the repository, so a separate Gradle installation is not required.
@@ -30,7 +31,9 @@ Players will sneak, look at the player, and hold their aim long enough to trigge
 
 | Command | Permission | Description |
 | --- | --- | --- |
-| `/spkiss reload` | `simplekiss.reload` | Reloads the entire configuration |
+| `/spkiss toggle true` | Everyone | Enables your kiss interactions. |
+| `/spkiss toggle false` | Everyone | Disables your kiss interactions, including receiving kisses. |
+| `/spkiss reload` | `simplekiss.reload` (operators by default) | Reloads the entire configuration; hidden from unauthorized tab completion. |
 
 ## Configuration
 
@@ -77,7 +80,7 @@ The build outputs the release jars to `target/`:
 
 Full build notes are in [docs/GRADLE.md](docs/GRADLE.md).
 
-This project uses Gradle and follows the Java version available to the current Gradle runtime. In practice, a recent JDK 21+ installation is the expected baseline.
+Building against the currently published Paper 26.3 API requires JDK 25 or newer. This is a build-time requirement only: generated plugin classes target Java 21-compatible bytecode. The Minecraft server still needs the Java runtime required by its own Minecraft version.
 
 ```text
 target/

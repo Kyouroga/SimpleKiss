@@ -4,7 +4,7 @@ Thank you for your interest in contributing to SimpleKiss! We appreciate your ti
 
 ## Before You Start
 
-- Install a compatible JDK for building (JDK 21 or newer is recommended).
+- Install JDK 25 or newer to build against the currently published Paper 26.3 pre-2 API. This is a build-only requirement; generated plugin classes target Java 21-compatible bytecode, and servers use the Java runtime required by their Minecraft version.
 - Use the Gradle wrapper from the repository root.
 - Keep changes focused and easy to review.
 
@@ -25,7 +25,7 @@ Thank you for your interest in contributing to SimpleKiss! We appreciate your ti
 
 Build details are in [GRADLE.md](GRADLE.md).
 
-The project uses Gradle and follows the Java version provided by the current Gradle runtime, so make sure your shell points to a recent JDK before running builds.
+Gradle runs on the JDK selected for the build. JDK 25 or newer is needed for the current Paper 26.3 API dependency, while the compiler's release target keeps plugin bytecode compatible with Java 21.
 
 ## General Style Guide
 

@@ -12,7 +12,7 @@ This covers the build setup for SimpleKiss.
 
 ## Java Version
 
-Recent JDK 21 or newer installation is the expected baseline.
+JDK 25 or newer is required only to build against the currently published Paper 26.3 pre-2 API. Generated plugin classes target Java 21-compatible bytecode; this does not require a server to run Java 25. Use the Java runtime required by the Minecraft server version being run.
 
 If a build fails because of Java, make sure the correct JDK is selected in your shell before running Gradle. On most systems this means setting `JAVA_HOME` to the desired JDK installation.
 

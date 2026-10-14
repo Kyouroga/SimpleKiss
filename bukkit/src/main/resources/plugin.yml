@@ -3,10 +3,12 @@ author: kyouroga
 description: A proximity-based kiss effects in Minecraft.
 version: 1.1.0
 main: org.kyouroga.simplekiss.bukkit.SimpleKiss
-api-version: 1.21
+api-version: '1.21'
 commands:
   spkiss:
     description: SimpleKiss plugin commands
-    usage: /<command> reload
-    permission: simplekiss.reload
-    permission-message: You do not have permission to reload SimpleKiss.
+    usage: /<command> toggle <true|false>
+permissions:
+  simplekiss.reload:
+    description: Allows reloading the SimpleKiss configuration.
+    default: op
