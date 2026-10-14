@@ -50,7 +50,7 @@ class KissManagerTest {
         );
         KissManager manager = new KissManager(plugin, config);
 
-        TestPlayer player = new TestPlayer();
+        TestPlayer player = new TestPlayer("00000000-0000-0000-0000-000000000001");
 
         assertEquals(0, manager.getCharge(player));
         manager.addCharge(player);
@@ -65,6 +65,42 @@ class KissManagerTest {
 
         manager.resetAll();
         assertFalse(manager.isOnCooldown(player));
+    }
+
+    /**
+     * Verifies that kiss interaction preferences default to enabled and are tracked per player.
+     */
+    @Test
+    void enabledStateIsTrackedPerPlayer() {
+        KissManager manager = new KissManager(createPlugin(), new PlatformConfig(
+                "Test",
+                8.0,
+                20,
+                15.0,
+                5L,
+                10,
+                0.5,
+                true,
+                "simplekiss.reload",
+                "KyourOga",
+                "SimpleKiss",
+                "main",
+                "v"
+        ));
+        TestPlayer firstPlayer = new TestPlayer("00000000-0000-0000-0000-000000000001");
+        TestPlayer secondPlayer = new TestPlayer("00000000-0000-0000-0000-000000000002");
+
+        assertTrue(manager.isEnabled(firstPlayer));
+        assertTrue(manager.isEnabled(secondPlayer));
+
+        manager.setEnabled(firstPlayer, false);
+
+        assertFalse(manager.isEnabled(firstPlayer));
+        assertTrue(manager.isEnabled(secondPlayer));
+
+        manager.setEnabled(firstPlayer, true);
+
+        assertTrue(manager.isEnabled(firstPlayer));
     }
 
     /**
@@ -87,7 +123,11 @@ class KissManagerTest {
     }
 
     private static final class TestPlayer implements KissManager.PlayerIdentity {
-        private final UUID uniqueId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        private final UUID uniqueId;
+
+        private TestPlayer(String uniqueId) {
+            this.uniqueId = UUID.fromString(uniqueId);
+        }
 
         /** Returns the fixed UUID used by this test player. */
         @Override

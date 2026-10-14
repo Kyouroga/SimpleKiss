@@ -19,6 +19,8 @@ import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -34,6 +36,9 @@ public class KissManager {
 
     // Time at which each player's last kiss was triggered.
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
+
+    // Players who have opted out of kiss interactions.
+    private final Set<UUID> disabledPlayers = new HashSet<>();
 
     /**
      * Creates a manager backed by the platform plugin and its configuration.
@@ -70,6 +75,25 @@ public class KissManager {
     public void resetAll() {
         chargeTicks.clear();
         cooldowns.clear();
+    }
+
+    /**
+     * Returns whether a player has kiss interactions enabled.
+     */
+    public boolean isEnabled(PlayerIdentity player) {
+        return !disabledPlayers.contains(player.getUniqueId());
+    }
+
+    /**
+     * Enables or disables kiss interactions for a player.
+     */
+    public void setEnabled(PlayerIdentity player, boolean enabled) {
+        if (enabled) {
+            disabledPlayers.remove(player.getUniqueId());
+        } else {
+            disabledPlayers.add(player.getUniqueId());
+            resetCharge(player);
+        }
     }
 
     public boolean isOnCooldown(Player p) {

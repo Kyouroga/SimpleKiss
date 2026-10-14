@@ -50,6 +50,11 @@ public class KissTask extends BukkitRunnable {
         // A charge is kept only while the player remains sneaking and looking at a valid target.
         for (Player p : plugin.getServer().getOnlinePlayers()) {
 
+            if (!manager.isEnabled(KissManager.PlayerIdentity.from(p))) {
+                manager.resetCharge(p);
+                continue;
+            }
+
             if (!p.isSneaking()) {
                 manager.resetCharge(p);
                 continue;
@@ -155,7 +160,7 @@ public class KissTask extends BukkitRunnable {
 
         // Select the nearest player inside the configured view cone, with a small tolerance for Bedrock players.
         for (Player other : p.getWorld().getPlayers()) {
-            if (other == p) continue;
+            if (other == p || !manager.isEnabled(KissManager.PlayerIdentity.from(other))) continue;
 
             Location head = other.getLocation().add(0, 1.5, 0);
             double distance = head.distance(eye);
