@@ -26,6 +26,7 @@ import java.util.logging.Level;
 
 public final class VelocityPlugin {
     private final PlatformConfig config;
+    private VelocityUpdateNotifier updateNotifier;
 
     /**
      * Creates the entry point with the shared platform configuration.
@@ -59,6 +60,30 @@ public final class VelocityPlugin {
 
     public String status() {
         return config.formatMessage("Velocity compatibility layer active");
+    }
+
+    /**
+     * Returns the running plugin version so the updater compares the actual plugin build, not the proxy runtime.
+     */
+    public String getPluginVersion() {
+        String version = VelocityPlugin.class.getPackage().getImplementationVersion();
+        return version == null || version.isBlank() ? "unknown" : version;
+    }
+
+    /**
+     * Starts the Velocity-side Modrinth update polling and join-based notifier for operators.
+     */
+    public void enable(ProxyServer proxyServer) {
+        updateNotifier = VelocityUpdateNotifier.start(this, config, proxyServer);
+    }
+
+    /**
+     * Cancels the periodic update check when the proxy is shutting down.
+     */
+    public void disable() {
+        if (updateNotifier != null) {
+            updateNotifier.shutdown();
+        }
     }
 
     /**

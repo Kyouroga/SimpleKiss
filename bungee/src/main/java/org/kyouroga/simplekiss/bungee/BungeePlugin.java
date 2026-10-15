@@ -27,6 +27,7 @@ import java.util.logging.Level;
 
 public final class BungeePlugin extends Plugin {
     private final PlatformConfig config;
+    private BungeeUpdateNotifier updateNotifier;
 
     /**
      * Creates an instance without loaded configuration.
@@ -47,6 +48,14 @@ public final class BungeePlugin extends Plugin {
         if (config != null) {
             ensureDefaultConfig();
             getLogger().info(config.formatMessage("BungeeCord compatibility layer active"));
+            updateNotifier = BungeeUpdateNotifier.start(this, config);
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (updateNotifier != null) {
+            updateNotifier.shutdown();
         }
     }
 

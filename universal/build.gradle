@@ -3,7 +3,6 @@ plugins {
 }
 
 group = 'org.kyouroga'
-version = 'beta-1.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21

@@ -1,7 +1,7 @@
 {
   "id": "simplekiss",
   "name": "SimpleKiss",
-  "version": "beta-1.0",
+  "version": "${projectVersion}",
   "description": "A proximity-based kiss effects in Minecraft.",
   "authors": [
     "kyouroga"

@@ -62,6 +62,10 @@ Use the command that matches the platform you want to build.
 
 This builds the full project, packages Bukkit/Spigot, BungeeCord, and Velocity platform jars with shared runtime code included, and writes the resulting jars into the `target` folder.
 
+### Project version control
+
+The project version is defined once by the `simplekissVersion` property in the root `gradle.properties` file.
+
 ### Verify platform jar packaging
 
 ```bash
