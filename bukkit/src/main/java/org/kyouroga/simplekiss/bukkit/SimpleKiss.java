@@ -21,9 +21,12 @@ import org.kyouroga.simplekiss.bootstrap.BootstrapInitializer;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.service.KissManager;
 
+import java.util.Objects;
+
 public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
     private KissManager manager;
+    private UpdateNotifier updateNotifier;
 
     /**
      * Loads the default configuration, starts shared services, and registers commands.
@@ -34,6 +37,10 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
         manager = BootstrapInitializer.initialize(this);
         registerCommands();
+        PlatformConfig config = PlatformConfig.from(this);
+        if (config.isUpdateCheckEnabled()) {
+            updateNotifier = UpdateNotifier.start(this, config);
+        }
     }
 
     private void registerCommands() {
@@ -59,6 +66,9 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
     @Override
     public void onDisable() {
+        if (updateNotifier != null) {
+            updateNotifier.shutdown();
+        }
         if (manager != null) {
             getLogger().info("SimpleKiss shutting down cleanly");
         }

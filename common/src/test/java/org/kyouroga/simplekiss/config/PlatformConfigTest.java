@@ -15,6 +15,7 @@
 package org.kyouroga.simplekiss.config;
 
 import org.junit.jupiter.api.Test;
+import org.kyouroga.simplekiss.update.ModrinthUpdateChecker;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,10 +42,6 @@ class PlatformConfigTest {
         particles.put("offset", 1.2);
         config.put("particles", particles);
 
-        Map<String, Object> updateCheck = new LinkedHashMap<>();
-        updateCheck.put("enabled", false);
-        config.put("update-check", updateCheck);
-
         PlatformConfig platformConfig = PlatformConfig.fromMap("TestPlatform", config);
 
         assertEquals("TestPlatform", platformConfig.getPlatformName());
@@ -54,9 +51,22 @@ class PlatformConfigTest {
         assertEquals(250L, platformConfig.getCooldownTicks());
         assertEquals(7, platformConfig.getParticleCount());
         assertEquals(1.2, platformConfig.getParticleOffset());
-        assertFalse(platformConfig.isUpdateCheckEnabled());
+        assertTrue(platformConfig.isUpdateCheckEnabled());
         assertEquals("simplekiss.reload", platformConfig.getUpdateNotifyPermission());
-        assertEquals("KyourOga", platformConfig.getGithubOwner());
+        assertEquals("simplekiss", platformConfig.getModrinthProjectId());
+        assertEquals("release", platformConfig.getModrinthVersionType());
+        assertEquals(6, platformConfig.getUpdateCheckIntervalHours());
+    }
+
+    /**
+     * Verifies that version comparisons respect release ordering and prerelease channels.
+     */
+    @Test
+    void modrinthVersionComparisonOrdersReleasesAndPrereleases() {
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0", "1.1.9"));
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0", "1.2.0-beta.1"));
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0-beta.1", "1.2.0-alpha.2"));
+        assertEquals(2, ModrinthUpdateChecker.calculateBehindBy("1.0.0", "1.2.0"));
     }
 
     /**
@@ -73,11 +83,7 @@ class PlatformConfigTest {
                 10,
                 0.5,
                 true,
-                "simplekiss.reload",
-                "KyourOga",
-                "SimpleKiss",
-                "main",
-                "v"
+                "simplekiss.reload"
         );
 
         assertEquals("[TESTPLATFORM] ready", platformConfig.formatMessage("ready"));

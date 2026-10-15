@@ -42,11 +42,7 @@ class KissManagerTest {
                 10,
                 0.5,
                 true,
-                "simplekiss.reload",
-                "KyourOga",
-                "SimpleKiss",
-                "main",
-                "v"
+                "simplekiss.reload"
         );
         KissManager manager = new KissManager(plugin, config);
 
@@ -81,11 +77,7 @@ class KissManagerTest {
                 10,
                 0.5,
                 true,
-                "simplekiss.reload",
-                "KyourOga",
-                "SimpleKiss",
-                "main",
-                "v"
+                "simplekiss.reload"
         ));
         TestPlayer firstPlayer = new TestPlayer("00000000-0000-0000-0000-000000000001");
         TestPlayer secondPlayer = new TestPlayer("00000000-0000-0000-0000-000000000002");
