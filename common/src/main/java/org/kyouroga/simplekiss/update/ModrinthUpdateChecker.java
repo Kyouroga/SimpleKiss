@@ -12,6 +12,11 @@
  * For the full license text, see:
  * https://www.gnu.org/licenses/gpl-3.0.html
  */
+
+/*
+ * @author sejoujp
+ * Stays as draft for now until new versioning scheme is confirmed and tested.
+ */
 package org.kyouroga.simplekiss.update;
 
 import java.io.IOException;
@@ -38,7 +43,7 @@ public final class ModrinthUpdateChecker {
             .build();
 
     private static final Pattern VERSION_OBJECT_PATTERN = Pattern.compile(
-            "\\{.*?\"version\"\\s*:\\s*\"([^\"]+)\".*?\"version_type\"\\s*:\\s*\"([^\"]+)\".*?\\}",
+            "\\{.*?\"version_number\"\\s*:\\s*\"([^\"]+)\".*?\"version_type\"\\s*:\\s*\"([^\"]+)\".*?\\}",
             Pattern.DOTALL
     );
 
@@ -79,9 +84,9 @@ public final class ModrinthUpdateChecker {
     }
 
     /**
-     * Queries Modrinth for the newest available project version and compares it with the running version.
+    * Queries Modrinth for its newest published project version, regardless of release channel.
      */
-    public static UpdateStatus check(String projectId, String currentVersion, String preferredChannel) throws IOException, InterruptedException {
+    public static UpdateStatus check(String projectId, String currentVersion) throws IOException, InterruptedException {
         if (projectId == null || projectId.isBlank()) {
             return UpdateStatus.none();
         }
@@ -98,45 +103,40 @@ public final class ModrinthUpdateChecker {
             return UpdateStatus.none();
         }
 
-        String payload = response.body();
-        String requestedChannel = preferredChannel == null ? "release" : preferredChannel.trim().toLowerCase(Locale.ROOT);
-        String latestVersion = null;
-        String versionType = null;
+        return fromVersionResponse(response.body(), projectId, currentVersion);
+    }
+
+    /**
+     * Compatibility overload; updates are selected by publication recency, not channel.
+     */
+    @Deprecated
+    public static UpdateStatus check(String projectId, String currentVersion, String preferredChannel) throws IOException, InterruptedException {
+        return check(projectId, currentVersion);
+    }
+
+    static UpdateStatus fromVersionResponse(String payload, String projectId, String currentVersion) {
+        if (payload == null || currentVersion == null || currentVersion.isBlank()) {
+            return UpdateStatus.none();
+        }
 
         Matcher matcher = VERSION_OBJECT_PATTERN.matcher(payload);
-        while (matcher.find()) {
-            String version = matcher.group(1);
-            String type = matcher.group(2).toLowerCase(Locale.ROOT);
-            if (requestedChannel.equals("release") && !"release".equals(type)) {
-                continue;
-            }
-            if (!requestedChannel.equals("release") && !requestedChannel.equals(type)) {
-                continue;
-            }
-            latestVersion = version;
-            versionType = type;
-            break;
-        }
-
-        if (latestVersion == null) {
-            matcher = VERSION_OBJECT_PATTERN.matcher(payload);
-            while (matcher.find()) {
-                latestVersion = matcher.group(1);
-                versionType = matcher.group(2).toLowerCase(Locale.ROOT);
-                break;
-            }
-        }
-
-        if (latestVersion == null || versionType == null || currentVersion == null || currentVersion.isBlank()) {
+        if (!matcher.find()) {
             return UpdateStatus.none();
         }
 
-        if (compareVersions(latestVersion, currentVersion) <= 0) {
+        String latestVersion = matcher.group(1);
+        String versionType = matcher.group(2).toLowerCase(Locale.ROOT);
+
+        if (latestVersion == null || versionType == null) {
             return UpdateStatus.none();
         }
 
-        int behindBy = calculateBehindBy(currentVersion, latestVersion);
-        return new UpdateStatus(true, behindBy, currentVersion, requestedChannel, "https://modrinth.com/project/" + projectId.trim(),
+        if (normalizeVersion(latestVersion).equals(normalizeVersion(currentVersion))) {
+            return UpdateStatus.none();
+        }
+
+        int behindBy = Math.max(1, calculateBehindBy(currentVersion, latestVersion));
+        return new UpdateStatus(true, behindBy, currentVersion, "latest", "https://modrinth.com/project/" + projectId.trim(),
                 latestVersion, versionType);
     }
 

@@ -54,8 +54,15 @@ public final class SimpleKissCommand implements CommandExecutor, TabCompleter {
             }
 
             boolean enabled = Boolean.parseBoolean(args[1]);
-            plugin.getManager().setEnabled(KissManager.PlayerIdentity.from(player), enabled);
-            sender.sendMessage("Kiss interactions " + (enabled ? "enabled." : "disabled."));
+            KissManager.PlayerIdentity identity = KissManager.PlayerIdentity.from(player);
+            try {
+                plugin.getManager().setEnabled(identity, enabled);
+                plugin.syncPreferenceToProxy(player, identity);
+                sender.sendMessage("Kiss interactions " + (enabled ? "enabled." : "disabled."));
+            } catch (IllegalStateException exception) {
+                plugin.getLogger().warning("Unable to save player preference: " + exception.getMessage());
+                sender.sendMessage("Could not save your kiss preference. Please try again later.");
+            }
             return true;
         }
 

@@ -15,25 +15,36 @@
 package org.kyouroga.simplekiss.bungee;
 
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.connection.Server;
+import net.md_5.bungee.api.event.PluginMessageEvent;
+import net.md_5.bungee.api.event.ServerConnectedEvent;
+import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.event.EventHandler;
 import org.kyouroga.simplekiss.config.PlatformConfig;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceDatabase;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceMessage;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
-public final class BungeePlugin extends Plugin {
-    private final PlatformConfig config;
+public final class BungeePlugin extends Plugin implements Listener {
+    private PlatformConfig config;
     private BungeeUpdateNotifier updateNotifier;
+    private PlayerPreferenceDatabase preferenceDatabase;
 
     /**
      * Creates an instance without loaded configuration.
      */
     public BungeePlugin() {
-        this.config = null;
+        this.config = PlatformConfig.fromMap("BungeeCord", Map.of());
     }
 
     /**
@@ -45,17 +56,27 @@ public final class BungeePlugin extends Plugin {
 
     @Override
     public void onEnable() {
-        if (config != null) {
-            ensureDefaultConfig();
-            getLogger().info(config.formatMessage("BungeeCord compatibility layer active"));
-            updateNotifier = BungeeUpdateNotifier.start(this, config);
-        }
+        ensureDefaultConfig();
+        getProxy().registerChannel(PlayerPreferenceMessage.CHANNEL);
+        preferenceDatabase = new PlayerPreferenceDatabase(
+                getDataFolder().toPath().resolve("player-preferences.db")
+        );
+        getProxy().getPluginManager().registerListener(this, this);
+        getProxy().getPluginManager().registerCommand(this, new BungeeToggleCommand(this, preferenceDatabase));
+        getLogger().info(config.formatMessage("BungeeCord compatibility layer active"));
+        updateNotifier = BungeeUpdateNotifier.start(this, config);
     }
 
     @Override
     public void onDisable() {
         if (updateNotifier != null) {
             updateNotifier.shutdown();
+        }
+        getProxy().getPluginManager().unregisterListeners(this);
+        getProxy().getPluginManager().unregisterCommands(this);
+        getProxy().unregisterChannel(PlayerPreferenceMessage.CHANNEL);
+        if (preferenceDatabase != null) {
+            preferenceDatabase.close();
         }
     }
 
@@ -82,6 +103,62 @@ public final class BungeePlugin extends Plugin {
             Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException exception) {
             getLogger().log(Level.WARNING, "Failed to restore BungeeCord config.yml to defaults", exception);
+        }
+    }
+
+    /**
+     * Sends a preference update to the player's connected Paper backend.
+     *
+     * @param player online proxy player
+     * @param enabled current preference
+     */
+    void sendPreference(ProxiedPlayer player, boolean enabled) {
+        player.sendData(
+                PlayerPreferenceMessage.CHANNEL,
+                PlayerPreferenceMessage.encodePreference(player.getUniqueId(), enabled)
+        );
+    }
+
+    /**
+     * Requests the backend's persisted state after a player connects or switches servers.
+     */
+    @EventHandler
+    public void onServerConnected(ServerConnectedEvent event) {
+        ProxiedPlayer player = event.getPlayer();
+        try {
+            Optional<Boolean> savedPreference = preferenceDatabase.findEnabled(player.getUniqueId());
+            byte[] message = savedPreference
+                    .map(enabled -> PlayerPreferenceMessage.encodePreference(player.getUniqueId(), enabled))
+                    .orElseGet(() -> PlayerPreferenceMessage.encodeRequest(player.getUniqueId()));
+            player.sendData(PlayerPreferenceMessage.CHANNEL, message);
+        } catch (IllegalStateException exception) {
+            getLogger().log(Level.SEVERE, "Unable to synchronize player preference.", exception);
+        }
+    }
+
+    /**
+     * Applies preference updates sent from an installed Paper backend.
+     */
+    @EventHandler
+    public void onPluginMessage(PluginMessageEvent event) {
+        if (!PlayerPreferenceMessage.CHANNEL.equals(event.getTag())) {
+            return;
+        }
+        event.setCancelled(true);
+        if (!(event.getSender() instanceof Server)
+                || !(event.getReceiver() instanceof ProxiedPlayer player)) {
+            return;
+        }
+
+        try {
+            PlayerPreferenceMessage.Message message = PlayerPreferenceMessage.decode(event.getData());
+            if (message.request() || !player.getUniqueId().equals(message.playerId())) {
+                getLogger().warning("Rejected an invalid backend preference message.");
+                return;
+            }
+            preferenceDatabase.saveEnabled(message.playerId(), message.enabled());
+        } catch (IOException | IllegalStateException exception) {
+            getLogger().log(Level.WARNING, "Unable to process backend preference message.", exception);
         }
     }
 

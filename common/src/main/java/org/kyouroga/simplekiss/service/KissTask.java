@@ -42,6 +42,7 @@ public class KissTask extends BukkitRunnable {
      */
     @Override
     public void run() {
+        manager.advanceTick();
 
         double maxDistance = config.getDistance();
         double maxAngle = Math.toRadians(config.getLookAngle());

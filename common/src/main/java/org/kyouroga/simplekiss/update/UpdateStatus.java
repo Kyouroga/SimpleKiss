@@ -78,6 +78,11 @@ public final class UpdateStatus {
         return latestVersion;
     }
 
+    /** Returns the latest version label without a known platform prefix. */
+    public String getDisplayLatestVersion() {
+        return latestVersion.replaceFirst("(?i)^(?:velocity|bungeecord|bungee|spigot|bukkit)[-_ ]+", "");
+    }
+
     /** Returns the channel of the newest version, such as release or beta. */
     public String getReleaseType() {
         return releaseType;

@@ -19,6 +19,7 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.update.ModrinthUpdateChecker;
 import org.kyouroga.simplekiss.update.UpdateStatus;
@@ -83,12 +84,7 @@ public final class VelocityUpdateNotifier implements Runnable {
             return;
         }
 
-        player.sendMessage(Component.text()
-                .append(Component.text("[SimpleKiss] "))
-                .append(Component.text("A newer plugin version is available: "))
-                .append(Component.text(latestStatus.getLatestVersion()))
-                .append(Component.text(" (you are " + latestStatus.getBehindBy() + " behind)."))
-                .build());
+        player.sendMessage(playerNotice(latestStatus));
     }
 
     /**
@@ -98,21 +94,41 @@ public final class VelocityUpdateNotifier implements Runnable {
         try {
             String currentVersion = plugin.getPluginVersion();
 
-            latestStatus = ModrinthUpdateChecker.check(
+            UpdateStatus previousStatus = latestStatus;
+            UpdateStatus checkedStatus = ModrinthUpdateChecker.check(
                     config.getModrinthProjectId(),
-                    currentVersion,
-                    config.getModrinthVersionType());
+                    currentVersion);
+            latestStatus = checkedStatus;
 
-            if (latestStatus.isUpdateAvailable()) {
-                System.out.println(config.formatMessage(
-                        "Update available: " + latestStatus.getCurrentTag() + " -> " + latestStatus.getLatestVersion()
-                                + " (" + latestStatus.getReleaseType() + ", " + latestStatus.getBehindBy() + " behind)"));
+            if (proxyServer != null && isNewUpdate(previousStatus, checkedStatus)) {
+                proxyServer.getConsoleCommandSource().sendMessage(Component.text(
+                    updateDescription(checkedStatus), NamedTextColor.YELLOW));
+                for (Player player : proxyServer.getAllPlayers()) {
+                    if (player.hasPermission(config.getUpdateNotifyPermission())) {
+                        player.sendMessage(playerNotice(checkedStatus));
+                    }
+                }
             }
         } catch (IOException | InterruptedException exception) {
-            if (proxyServer != null) {
-                System.err.println(config.formatMessage("Failed to check Modrinth for updates: " + exception.getMessage()));
-            }
             Thread.currentThread().interrupt();
         }
+    }
+
+    private boolean isNewUpdate(UpdateStatus previousStatus, UpdateStatus checkedStatus) {
+        return checkedStatus.isUpdateAvailable()
+                && (!previousStatus.isUpdateAvailable()
+                || !previousStatus.getLatestVersion().equals(checkedStatus.getLatestVersion()));
+    }
+
+    private String updateDescription(UpdateStatus status) {
+        return "Update available: " + status.getCurrentTag() + " -> " + status.getDisplayLatestVersion()
+                + " (" + status.getReleaseType() + ", " + status.getBehindBy() + " behind)";
+    }
+
+    private Component playerNotice(UpdateStatus status) {
+        return Component.text("[SimpleKiss] ", NamedTextColor.GOLD)
+                .append(Component.text("A newer plugin version is available: ", NamedTextColor.YELLOW))
+                .append(Component.text(status.getDisplayLatestVersion(), NamedTextColor.WHITE))
+                .append(Component.text(" (you are " + status.getBehindBy() + " behind).", NamedTextColor.YELLOW));
     }
 }

@@ -55,7 +55,6 @@ public final class BungeeUpdateNotifier implements Listener, Runnable {
         notifier.run();
         notifier.scheduler.scheduleAtFixedRate(notifier, config.getUpdateCheckIntervalHours(), config.getUpdateCheckIntervalHours(), TimeUnit.HOURS);
         ProxyServer.getInstance().getPluginManager().registerListener(plugin, notifier);
-        plugin.getLogger().info(config.formatMessage("Modrinth updater enabled. Checks run every " + config.getUpdateCheckIntervalHours() + " hours."));
         return notifier;
     }
 
@@ -72,18 +71,21 @@ public final class BungeeUpdateNotifier implements Listener, Runnable {
     @Override
     public void run() {
         try {
-            latestStatus = ModrinthUpdateChecker.check(
+            UpdateStatus previousStatus = latestStatus;
+            UpdateStatus checkedStatus = ModrinthUpdateChecker.check(
                     config.getModrinthProjectId(),
-                    plugin.getDescription().getVersion(),
-                    config.getModrinthVersionType());
+                    plugin.getDescription().getVersion());
+            latestStatus = checkedStatus;
 
-            if (latestStatus.isUpdateAvailable()) {
-                plugin.getLogger().warning(config.formatMessage(
-                        "Update available: " + latestStatus.getCurrentTag() + " -> " + latestStatus.getLatestVersion()
-                                + " (" + latestStatus.getReleaseType() + ", " + latestStatus.getBehindBy() + " behind)"));
+            if (isNewUpdate(previousStatus, checkedStatus)) {
+                plugin.getLogger().warning(updateDescription(checkedStatus));
+                for (net.md_5.bungee.api.connection.ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+                    if (player.hasPermission(config.getUpdateNotifyPermission())) {
+                        player.sendMessage(playerNotice(checkedStatus));
+                    }
+                }
             }
         } catch (IOException | InterruptedException exception) {
-            plugin.getLogger().warning(config.formatMessage("Failed to check Modrinth for updates: " + exception.getMessage()));
             Thread.currentThread().interrupt();
         }
     }
@@ -101,8 +103,22 @@ public final class BungeeUpdateNotifier implements Listener, Runnable {
             return;
         }
 
-        event.getPlayer().sendMessage(new TextComponent(
-                "§6[SimpleKiss] §eA newer plugin version is available: §f" + latestStatus.getLatestVersion()
-                        + " §e(you are " + latestStatus.getBehindBy() + " behind)."));
+        event.getPlayer().sendMessage(playerNotice(latestStatus));
+    }
+
+    private boolean isNewUpdate(UpdateStatus previousStatus, UpdateStatus checkedStatus) {
+        return checkedStatus.isUpdateAvailable()
+            && (!previousStatus.isUpdateAvailable()
+            || !previousStatus.getLatestVersion().equals(checkedStatus.getLatestVersion()));
+    }
+
+    private String updateDescription(UpdateStatus status) {
+        return "Update available: " + status.getCurrentTag() + " -> " + status.getDisplayLatestVersion()
+            + " (" + status.getReleaseType() + ", " + status.getBehindBy() + " behind)";
+    }
+
+    private TextComponent playerNotice(UpdateStatus status) {
+        return new TextComponent("§6[SimpleKiss] §eA newer plugin version is available: §f" + status.getDisplayLatestVersion()
+            + " §e(you are " + status.getBehindBy() + " behind).");
     }
 }

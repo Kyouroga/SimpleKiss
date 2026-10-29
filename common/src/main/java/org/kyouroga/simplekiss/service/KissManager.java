@@ -15,8 +15,10 @@
 package org.kyouroga.simplekiss.service;
 
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.config.PlatformConfig;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceDatabase;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,16 +38,25 @@ public class KissManager {
 
     // Time at which each player's last kiss was triggered.
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
+    private long currentTick;
 
     // Players who have opted out of kiss interactions.
-    private final Set<UUID> disabledPlayers = new HashSet<>();
+    private final Set<UUID> disabledPlayers;
+    private final PlayerPreferenceDatabase preferenceDatabase;
+    private BukkitTask task;
 
     /**
-     * Creates a manager backed by the platform plugin and its configuration.
+     * Creates a manager backed by the platform plugin, configuration, and preference database.
      */
-    public KissManager(SimpleKissBridge plugin, PlatformConfig config) {
+    public KissManager(
+            SimpleKissBridge plugin,
+            PlatformConfig config,
+            PlayerPreferenceDatabase preferenceDatabase
+    ) {
         this.plugin = plugin;
         this.config = config;
+        this.preferenceDatabase = preferenceDatabase;
+        this.disabledPlayers = new HashSet<>(preferenceDatabase.loadDisabledPlayers());
     }
 
     public int getCharge(Player p) {
@@ -88,12 +99,58 @@ public class KissManager {
      * Enables or disables kiss interactions for a player.
      */
     public void setEnabled(PlayerIdentity player, boolean enabled) {
+        UUID playerId = player.getUniqueId();
+        // Persist first so a failed database write cannot diverge from in-memory state.
+        preferenceDatabase.saveEnabled(playerId, enabled);
         if (enabled) {
-            disabledPlayers.remove(player.getUniqueId());
+            disabledPlayers.remove(playerId);
         } else {
-            disabledPlayers.add(player.getUniqueId());
+            disabledPlayers.add(playerId);
             resetCharge(player);
         }
+    }
+
+    /**
+     * Attaches the repeating task so reload and shutdown can cancel it reliably.
+     *
+     * @param task scheduled task owned by this manager
+     */
+    public void setTask(BukkitTask task) {
+        this.task = task;
+    }
+
+    /**
+     * Cancels this manager's repeating task without closing the shared database.
+     */
+    public void stopTask() {
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+    }
+
+    /**
+     * Returns the database shared by this manager and its reload replacement.
+     *
+     * @return the active player preference database
+     */
+    public PlayerPreferenceDatabase getPreferenceDatabase() {
+        return preferenceDatabase;
+    }
+
+    /**
+     * Stops the repeating task and closes the preference database on plugin shutdown.
+     */
+    public void close() {
+        stopTask();
+        preferenceDatabase.close();
+    }
+
+    /**
+     * Advances the manager clock once for each server tick.
+     */
+    void advanceTick() {
+        currentTick++;
     }
 
     public boolean isOnCooldown(Player p) {
@@ -104,9 +161,7 @@ public class KissManager {
         if (!cooldowns.containsKey(p.getUniqueId())) return false;
 
         long last = cooldowns.get(p.getUniqueId());
-        long cooldownMillis = config.getCooldownTicks() * 50L;
-
-        return System.currentTimeMillis() - last < cooldownMillis;
+        return currentTick - last < config.getCooldownTicks();
     }
 
     public void setCooldown(Player p) {
@@ -114,7 +169,7 @@ public class KissManager {
     }
 
     public void setCooldown(PlayerIdentity p) {
-        cooldowns.put(p.getUniqueId(), System.currentTimeMillis());
+        cooldowns.put(p.getUniqueId(), currentTick);
     }
 
     public interface PlayerIdentity {

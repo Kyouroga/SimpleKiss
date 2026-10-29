@@ -15,13 +15,13 @@
 package org.kyouroga.simplekiss.bukkit;
 
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.bootstrap.BootstrapInitializer;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.service.KissManager;
-
-import java.util.Objects;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceMessage;
 
 public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
@@ -36,6 +36,12 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
         saveDefaultConfig();
 
         manager = BootstrapInitializer.initialize(this);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, PlayerPreferenceMessage.CHANNEL);
+        getServer().getMessenger().registerIncomingPluginChannel(
+                this,
+                PlayerPreferenceMessage.CHANNEL,
+                new PlayerPreferenceSyncListener(this)
+        );
         registerCommands();
         PlatformConfig config = PlatformConfig.from(this);
         if (config.isUpdateCheckEnabled()) {
@@ -66,10 +72,13 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
 
     @Override
     public void onDisable() {
+        getServer().getMessenger().unregisterIncomingPluginChannel(this);
+        getServer().getMessenger().unregisterOutgoingPluginChannel(this);
         if (updateNotifier != null) {
             updateNotifier.shutdown();
         }
         if (manager != null) {
+            manager.close();
             getLogger().info("SimpleKiss shutting down cleanly");
         }
     }
@@ -79,5 +88,26 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
      */
     public KissManager getManager() {
         return manager;
+    }
+
+    /**
+     * Sends the player's current backend preference to the connected proxy.
+     *
+     * @param player online player whose preference changed
+     * @param identity identity used by the shared manager
+     */
+    void syncPreferenceToProxy(Player player, KissManager.PlayerIdentity identity) {
+        boolean enabled = manager.isEnabled(identity);
+        sendPreferenceMessage(player, PlayerPreferenceMessage.encodePreference(player.getUniqueId(), enabled));
+    }
+
+    /**
+     * Sends a player preference message through the active backend connection.
+     *
+     * @param player online player to use for plugin messaging
+     * @param message encoded preference message
+     */
+    void sendPreferenceMessage(Player player, byte[] message) {
+        player.sendPluginMessage(this, PlayerPreferenceMessage.CHANNEL, message);
     }
 }

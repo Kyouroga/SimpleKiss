@@ -14,7 +14,6 @@
  */
 package org.kyouroga.simplekiss.bukkit;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -53,7 +52,6 @@ public final class UpdateNotifier implements Listener, Runnable {
         notifier.run();
         notifier.scheduler.scheduleAtFixedRate(notifier, config.getUpdateCheckIntervalHours(), config.getUpdateCheckIntervalHours(), TimeUnit.HOURS);
         plugin.getServer().getPluginManager().registerEvents(notifier, plugin);
-        plugin.getLogger().info(config.formatMessage("Modrinth updater enabled. Checks run every " + config.getUpdateCheckIntervalHours() + " hours."));
         return notifier;
     }
 
@@ -64,18 +62,23 @@ public final class UpdateNotifier implements Listener, Runnable {
     @Override
     public void run() {
         try {
-            latestStatus = ModrinthUpdateChecker.check(
+            UpdateStatus previousStatus = latestStatus;
+            UpdateStatus checkedStatus = ModrinthUpdateChecker.check(
                     config.getModrinthProjectId(),
-                    plugin.getDescription().getVersion(),
-                    config.getModrinthVersionType());
+                    plugin.getDescription().getVersion());
+            latestStatus = checkedStatus;
 
-            if (latestStatus.isUpdateAvailable()) {
-                plugin.getLogger().warning(config.formatMessage(
-                        "Update available: " + latestStatus.getCurrentTag() + " -> " + latestStatus.getLatestVersion() +
-                                " (" + latestStatus.getReleaseType() + ", " + latestStatus.getBehindBy() + " behind)"));
+            if (isNewUpdate(previousStatus, checkedStatus)) {
+                plugin.getLogger().warning(updateDescription(checkedStatus));
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    for (Player player : plugin.getServer().getOnlinePlayers()) {
+                        if (player.hasPermission(config.getUpdateNotifyPermission())) {
+                            player.sendMessage(playerNotice(checkedStatus));
+                        }
+                    }
+                });
             }
         } catch (IOException | InterruptedException exception) {
-            plugin.getLogger().warning(config.formatMessage("Failed to check Modrinth for updates: " + exception.getMessage()));
             Thread.currentThread().interrupt();
         }
     }
@@ -86,8 +89,23 @@ public final class UpdateNotifier implements Listener, Runnable {
             return;
         }
 
-        event.getPlayer().sendMessage(ChatColor.GOLD + "[SimpleKiss] " + ChatColor.YELLOW +
-                "A newer plugin version is available: " + ChatColor.WHITE + latestStatus.getLatestVersion() +
-                ChatColor.YELLOW + " (you are " + latestStatus.getBehindBy() + " behind)." );
+        event.getPlayer().sendMessage(playerNotice(latestStatus));
+    }
+
+    private boolean isNewUpdate(UpdateStatus previousStatus, UpdateStatus checkedStatus) {
+        return checkedStatus.isUpdateAvailable()
+            && (!previousStatus.isUpdateAvailable()
+            || !previousStatus.getLatestVersion().equals(checkedStatus.getLatestVersion()));
+    }
+
+    private String updateDescription(UpdateStatus status) {
+        return "Update available: " + status.getCurrentTag() + " -> " + status.getDisplayLatestVersion() +
+            " (" + status.getReleaseType() + ", " + status.getBehindBy() + " behind)";
+    }
+
+    private String playerNotice(UpdateStatus status) {
+        return ChatColor.GOLD + "[SimpleKiss] " + ChatColor.YELLOW +
+            "A newer plugin version is available: " + ChatColor.WHITE + status.getDisplayLatestVersion() +
+            ChatColor.YELLOW + " (you are " + status.getBehindBy() + " behind).";
     }
 }

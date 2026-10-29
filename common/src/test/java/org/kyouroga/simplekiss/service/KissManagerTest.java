@@ -15,10 +15,13 @@
 package org.kyouroga.simplekiss.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.config.PlatformConfig;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceDatabase;
 
 import java.lang.reflect.Proxy;
+import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KissManagerTest {
+
+    @TempDir
+    Path temporaryDirectory;
 
     /**
      * Verifies that charge and cooldown state can be created and cleared.
@@ -44,7 +50,7 @@ class KissManagerTest {
                 true,
                 "simplekiss.reload"
         );
-        KissManager manager = new KissManager(plugin, config);
+        KissManager manager = new KissManager(plugin, config, createDatabase("charge.db"));
 
         TestPlayer player = new TestPlayer("00000000-0000-0000-0000-000000000001");
 
@@ -61,6 +67,28 @@ class KissManagerTest {
 
         manager.resetAll();
         assertFalse(manager.isOnCooldown(player));
+        manager.close();
+    }
+
+    /**
+     * Verifies that cooldown duration is measured in server ticks rather than wall-clock time.
+     */
+    @Test
+    void cooldownExpiresAfterConfiguredNumberOfTicks() {
+        KissManager manager = new KissManager(createPlugin(), testConfig(), createDatabase("tick-cooldown.db"));
+        TestPlayer player = new TestPlayer("00000000-0000-0000-0000-000000000004");
+
+        manager.setCooldown(player);
+        assertTrue(manager.isOnCooldown(player));
+
+        for (int tick = 0; tick < 4; tick++) {
+            manager.advanceTick();
+            assertTrue(manager.isOnCooldown(player));
+        }
+
+        manager.advanceTick();
+        assertFalse(manager.isOnCooldown(player));
+        manager.close();
     }
 
     /**
@@ -78,7 +106,7 @@ class KissManagerTest {
                 0.5,
                 true,
                 "simplekiss.reload"
-        ));
+        ), createDatabase("preferences.db"));
         TestPlayer firstPlayer = new TestPlayer("00000000-0000-0000-0000-000000000001");
         TestPlayer secondPlayer = new TestPlayer("00000000-0000-0000-0000-000000000002");
 
@@ -93,6 +121,55 @@ class KissManagerTest {
         manager.setEnabled(firstPlayer, true);
 
         assertTrue(manager.isEnabled(firstPlayer));
+        manager.close();
+    }
+
+    /**
+     * Verifies that disabled preferences survive closing and reopening the database.
+     */
+    @Test
+    void disabledPreferenceSurvivesDatabaseReopen() {
+        TestPlayer player = new TestPlayer("00000000-0000-0000-0000-000000000003");
+        PlayerPreferenceDatabase database = createDatabase("persistent-preferences.db");
+        KissManager manager = new KissManager(createPlugin(), testConfig(), database);
+
+        manager.setEnabled(player, false);
+        manager.close();
+
+        KissManager reloadedManager = new KissManager(
+                createPlugin(),
+                testConfig(),
+                createDatabase("persistent-preferences.db")
+        );
+        assertFalse(reloadedManager.isEnabled(player));
+        reloadedManager.setEnabled(player, true);
+        reloadedManager.close();
+
+        KissManager enabledManager = new KissManager(
+                createPlugin(),
+                testConfig(),
+                createDatabase("persistent-preferences.db")
+        );
+        assertTrue(enabledManager.isEnabled(player));
+        enabledManager.close();
+    }
+
+    private PlayerPreferenceDatabase createDatabase(String fileName) {
+        return new PlayerPreferenceDatabase(temporaryDirectory.resolve(fileName));
+    }
+
+    private static PlatformConfig testConfig() {
+        return new PlatformConfig(
+                "Test",
+                8.0,
+                20,
+                15.0,
+                5L,
+                10,
+                0.5,
+                true,
+                "simplekiss.reload"
+        );
     }
 
     /**
