@@ -1,4 +1,5 @@
 dependencies {
+    implementation 'org.xerial:sqlite-jdbc:3.49.1.0'
     compileOnly 'io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha'
     compileOnly 'com.velocitypowered:velocity-api:3.4.0'
     compileOnly 'net.md-5:bungeecord-api:1.21-R0.4'

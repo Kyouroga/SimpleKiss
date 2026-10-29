@@ -65,6 +65,12 @@ subprojects {
             from(project(':common').sourceSets.main.output)
             from(project(':bootstrap').sourceSets.main.output)
             from(project(':universal').sourceSets.main.output)
+            from {
+                project(':common').configurations.runtimeClasspath.collect { dependency ->
+                    dependency.isDirectory() ? dependency : zipTree(dependency)
+                }
+            }
+            exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
         }
     }
 }

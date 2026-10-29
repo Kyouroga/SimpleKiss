@@ -8,6 +8,7 @@ Players will sneak, look at the player, and hold their aim long enough to trigge
 - Configurable interaction distance and viewing angle.
 - Adjustable charge time before the effect is triggered.
 - Per-player cooldowns.
+- Player toggle preferences stored in a local SQLite database and retained across restarts and plugin reloads.
 - Heart particles shown only to the appropriate players.
 
 ## Requirements
@@ -22,18 +23,21 @@ Players will sneak, look at the player, and hold their aim long enough to trigge
 ## Installation
 
 1. Build the project with the command below.
-2. Copy `target/SimpleKiss-Spigot.jar` to the server's `plugins` directory.
-3. Start the server once to generate the configuration file.
-4. Edit `plugins/SimpleKiss/config.yml` if needed.
-5. Restart the server.
+2. Copy `target/SimpleKiss-Spigot.jar` to each Paper server's `plugins` directory.
+3. If using a proxy, also install `target/SimpleKiss-BungeeCord.jar` on BungeeCord or `target/SimpleKiss-Velocity.jar` on Velocity.
+4. Start the server once to generate the configuration file.
+5. Edit `plugins/SimpleKiss/config.yml` if needed.
+6. Restart the server.
+
+Player toggle preferences are stored in `player-preferences.db` in each plugin's data directory. When a proxy is installed, its database is the network-wide preference source and synchronizes preferences with Paper backends as players connect. Install SimpleKiss on every Paper backend and configure the proxy's normal UUID forwarding so player identities match. Keep the Paper and proxy database files when backing up or moving plugin data folders.
 
 ## Commands
 
 | Command | Permission | Description |
 | --- | --- | --- |
-| `/spkiss toggle true` | Everyone | Enables your kiss interactions. |
-| `/spkiss toggle false` | Everyone | Disables your kiss interactions, including receiving kisses. |
-| `/spkiss reload` | `simplekiss.reload` (operators by default) | Reloads the entire configuration; hidden from unauthorized tab completion. |
+| `/spkiss toggle true` | Everyone | Enables your kiss interactions. Available on Paper, BungeeCord, and Velocity. |
+| `/spkiss toggle false` | Everyone | Disables your kiss interactions, including receiving kisses. Available on Paper, BungeeCord, and Velocity. |
+| `/spkiss reload` | `simplekiss.reload` (operators by default) | Reloads the Paper configuration; hidden from unauthorized tab completion. |
 
 ## Configuration
 

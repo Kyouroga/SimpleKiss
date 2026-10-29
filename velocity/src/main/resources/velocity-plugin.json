@@ -11,9 +11,7 @@
   "commands": {
     "spkiss": {
       "description": "SimpleKiss plugin commands",
-      "usage": "/<command> reload",
-      "permission": "simplekiss.reload",
-      "permission-message": "You do not have permission to reload SimpleKiss."
+      "usage": "/<command> toggle <true|false>"
     }
   }
 }
