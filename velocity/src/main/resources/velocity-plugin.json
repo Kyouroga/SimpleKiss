@@ -11,7 +11,13 @@
   "commands": {
     "spkiss": {
       "description": "SimpleKiss plugin commands",
-      "usage": "/<command> toggle <true|false>"
+      "usage": "/<command> toggle <true | false>"
+    }
+  },
+  "permissions": {
+    "simplekiss.reload": {
+      "description": "Allows reloading the SimpleKiss configuration.",
+      "default": "op"
     }
   }
 }
