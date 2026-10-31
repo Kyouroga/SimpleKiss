@@ -91,6 +91,20 @@ class KissManagerTest {
         manager.close();
     }
 
+    @Test
+    void forgetPlayerClearsTransientState() {
+        KissManager manager = new KissManager(createPlugin(), testConfig(), createDatabase("forget-player.db"));
+        TestPlayer player = new TestPlayer("00000000-0000-0000-0000-000000000005");
+
+        manager.addCharge(player);
+        manager.setCooldown(player);
+        manager.forgetPlayer(player);
+
+        assertEquals(0, manager.getCharge(player));
+        assertFalse(manager.isOnCooldown(player));
+        manager.close();
+    }
+
     /**
      * Verifies that kiss interaction preferences default to enabled and are tracked per player.
      */

@@ -101,8 +101,7 @@ public final class VelocityUpdateNotifier implements Runnable {
             latestStatus = checkedStatus;
 
             if (proxyServer != null && isNewUpdate(previousStatus, checkedStatus)) {
-                proxyServer.getConsoleCommandSource().sendMessage(Component.text(
-                    updateDescription(checkedStatus), NamedTextColor.YELLOW));
+                plugin.logUpdateAvailable(updateDescription(checkedStatus));
                 for (Player player : proxyServer.getAllPlayers()) {
                     if (player.hasPermission(config.getUpdateNotifyPermission())) {
                         player.sendMessage(playerNotice(checkedStatus));

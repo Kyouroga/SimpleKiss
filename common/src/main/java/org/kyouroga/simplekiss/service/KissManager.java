@@ -83,6 +83,15 @@ public class KissManager {
         chargeTicks.remove(p.getUniqueId());
     }
 
+    /**
+     * Removes transient state for a player who has left the server.
+     */
+    public void forgetPlayer(PlayerIdentity player) {
+        UUID playerId = player.getUniqueId();
+        chargeTicks.remove(playerId);
+        cooldowns.remove(playerId);
+    }
+
     public void resetAll() {
         chargeTicks.clear();
         cooldowns.clear();

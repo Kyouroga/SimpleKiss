@@ -46,6 +46,7 @@ public class KissTask extends BukkitRunnable {
 
         double maxDistance = config.getDistance();
         double maxAngle = Math.toRadians(config.getLookAngle());
+        double maxDistanceSquared = maxDistance * maxDistance;
         int chargeTime = config.getChargeTime();
 
         // A charge is kept only while the player remains sneaking and looking at a valid target.
@@ -65,7 +66,7 @@ public class KissTask extends BukkitRunnable {
              * Bedrock players are treated with a slightly wider aiming cone so interaction feels natural.
              */
             boolean bedrockPlayer = kissBedrock.isBedrockPlayer(p);
-            Player target = getTargetPlayer(p, maxDistance, maxAngle, bedrockPlayer);
+            Player target = getTargetPlayer(p, maxDistanceSquared, maxAngle, bedrockPlayer);
 
             if (target == null || !canPerformKiss(p, target)) {
                 manager.resetCharge(p);
@@ -152,30 +153,45 @@ public class KissTask extends BukkitRunnable {
     /**
      * Finds the nearest player inside the initiator's allowed view cone.
      */
-    private Player getTargetPlayer(Player p, double maxDistance, double maxAngle, boolean bedrockPlayer) {
+    private Player getTargetPlayer(Player p, double maxDistanceSquared, double maxAngle, boolean bedrockPlayer) {
         Location eye = p.getEyeLocation();
         Vector direction = eye.getDirection().normalize();
+        double eyeX = eye.getX();
+        double eyeY = eye.getY();
+        double eyeZ = eye.getZ();
+        double directionX = direction.getX();
+        double directionY = direction.getY();
+        double directionZ = direction.getZ();
+        double effectiveMaxAngle = bedrockPlayer ? Math.max(maxAngle, Math.toRadians(20.0)) : maxAngle;
+        double minimumDirectionDot = Math.cos(effectiveMaxAngle);
+        double minimumDirectionDotSquared = minimumDirectionDot * minimumDirectionDot;
 
         Player best = null;
-        double bestDistance = maxDistance;
+        double bestDistanceSquared = maxDistanceSquared;
 
         // Select the nearest player inside the configured view cone, with a small tolerance for Bedrock players.
         for (Player other : p.getWorld().getPlayers()) {
             if (other == p || !manager.isEnabled(KissManager.PlayerIdentity.from(other))) continue;
 
-            Location head = other.getLocation().add(0, 1.5, 0);
-            double distance = head.distance(eye);
+            Location otherLocation = other.getLocation();
+            double dx = otherLocation.getX() - eyeX;
+            double dy = otherLocation.getY() + 1.5 - eyeY;
+            double dz = otherLocation.getZ() - eyeZ;
+            double distanceSquared = dx * dx + dy * dy + dz * dz;
 
-            if (distance > bestDistance) continue;
+            if (distanceSquared > bestDistanceSquared) continue;
 
-            Vector toTarget = head.toVector().subtract(eye.toVector()).normalize();
-            double angle = direction.angle(toTarget);
-            double effectiveMaxAngle = bedrockPlayer ? Math.max(maxAngle, Math.toRadians(20.0)) : maxAngle;
-
-            if (angle > effectiveMaxAngle) continue;
+            double directionDot = directionX * dx + directionY * dy + directionZ * dz;
+            if (distanceSquared > 0.0) {
+                if (directionDot < 0.0
+                        || (effectiveMaxAngle < Math.PI / 2.0
+                        && directionDot * directionDot < minimumDirectionDotSquared * distanceSquared)) {
+                    continue;
+                }
+            }
 
             best = other;
-            bestDistance = distance;
+            bestDistanceSquared = distanceSquared;
         }
 
         return best;

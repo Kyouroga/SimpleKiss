@@ -44,24 +44,55 @@ final class BungeeToggleCommand extends Command {
      */
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof ProxiedPlayer player)) {
-            sender.sendMessage(new TextComponent("Only players can change their own kiss setting."));
-            return;
-        }
-        if (args.length != 2 || !"toggle".equalsIgnoreCase(args[0])
-                || !("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
-            sender.sendMessage(new TextComponent("Usage: /spkiss toggle <true|false>"));
+        if (args.length == 1 && "reload".equalsIgnoreCase(args[0])) {
+            if (!sender.hasPermission("simplekiss.reload")) {
+                sender.sendMessage(new TextComponent("You do not have permission to reload SimpleKiss."));
+                return;
+            }
+            plugin.reloadConfig(sender);
             return;
         }
 
-        boolean enabled = Boolean.parseBoolean(args[1]);
-        try {
-            database.saveEnabled(player.getUniqueId(), enabled);
-            plugin.sendPreference(player, enabled);
-            player.sendMessage(new TextComponent("Kiss interactions " + (enabled ? "enabled." : "disabled.")));
-        } catch (IllegalStateException exception) {
-            plugin.getLogger().warning("Unable to save player preference: " + exception.getMessage());
-            player.sendMessage(new TextComponent("Could not save your kiss preference. Please try again later."));
+        if (args.length > 0 && "toggle".equalsIgnoreCase(args[0])) {
+            if (!(sender instanceof ProxiedPlayer player)) {
+                sender.sendMessage(new TextComponent("Only players can check their own kiss setting."));
+                return;
+            }
+
+            if (args.length == 1) {
+                try {
+                    boolean enabled = database.findEnabled(player.getUniqueId()).orElse(true);
+                    player.sendMessage(new TextComponent(
+                            "Kiss interactions are currently " + (enabled ? "enabled." : "disabled.")
+                    ));
+                } catch (IllegalStateException exception) {
+                    plugin.getLogger().warning("Unable to read player preference: " + exception.getMessage());
+                    player.sendMessage(new TextComponent("Could not read your kiss preference. Please try again later."));
+                }
+                return;
+            }
+
+            if (args.length != 2 || !("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
+                sender.sendMessage(new TextComponent("Usage: /spkiss toggle [true | false]"));
+                return;
+            }
+
+            boolean enabled = Boolean.parseBoolean(args[1]);
+            try {
+                database.saveEnabled(player.getUniqueId(), enabled);
+                plugin.sendPreference(player, enabled);
+                player.sendMessage(new TextComponent("Kiss interactions " + (enabled ? "enabled." : "disabled.")));
+            } catch (IllegalStateException exception) {
+                plugin.getLogger().warning("Unable to save player preference: " + exception.getMessage());
+                player.sendMessage(new TextComponent("Could not save your kiss preference. Please try again later."));
+            }
+            return;
+        }
+
+        sender.sendMessage(new TextComponent("Usage: /spkiss toggle"));
+        sender.sendMessage(new TextComponent("Usage: /spkiss toggle <true | false>"));
+        if (sender.hasPermission("simplekiss.reload")) {
+            sender.sendMessage(new TextComponent("Usage: /spkiss reload"));
         }
     }
 }

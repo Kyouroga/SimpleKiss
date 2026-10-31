@@ -48,26 +48,56 @@ final class VelocityToggleCommand implements SimpleCommand {
     @Override
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
-        if (!(source instanceof Player player)) {
-            source.sendMessage(Component.text("Only players can change their own kiss setting."));
-            return;
-        }
-
         String[] args = invocation.arguments();
-        if (args.length != 2 || !"toggle".equalsIgnoreCase(args[0])
-                || !("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
-            source.sendMessage(Component.text("Usage: /spkiss toggle <true|false>"));
+        if (args.length == 1 && "reload".equalsIgnoreCase(args[0])) {
+            if (!source.hasPermission("simplekiss.reload")) {
+                source.sendMessage(Component.text("You do not have permission to reload SimpleKiss."));
+                return;
+            }
+            plugin.reloadConfig(source);
             return;
         }
 
-        boolean enabled = Boolean.parseBoolean(args[1]);
-        try {
-            database.saveEnabled(player.getUniqueId(), enabled);
-            plugin.sendPreference(player, enabled);
-            player.sendMessage(Component.text("Kiss interactions " + (enabled ? "enabled." : "disabled.")));
-        } catch (IllegalStateException exception) {
-            plugin.logPreferenceFailure(exception);
-            player.sendMessage(Component.text("Could not save your kiss preference. Please try again later."));
+        if (args.length > 0 && "toggle".equalsIgnoreCase(args[0])) {
+            if (!(source instanceof Player player)) {
+                source.sendMessage(Component.text("Only players can check their own kiss setting."));
+                return;
+            }
+
+            if (args.length == 1) {
+                try {
+                    boolean enabled = database.findEnabled(player.getUniqueId()).orElse(true);
+                    player.sendMessage(Component.text(
+                            "Kiss interactions are currently " + (enabled ? "enabled." : "disabled.")
+                    ));
+                } catch (IllegalStateException exception) {
+                    plugin.logPreferenceFailure(exception);
+                    player.sendMessage(Component.text("Could not read your kiss preference. Please try again later."));
+                }
+                return;
+            }
+
+            if (args.length != 2 || !("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
+                source.sendMessage(Component.text("Usage: /spkiss toggle [true | false]"));
+                return;
+            }
+
+            boolean enabled = Boolean.parseBoolean(args[1]);
+            try {
+                database.saveEnabled(player.getUniqueId(), enabled);
+                plugin.sendPreference(player, enabled);
+                player.sendMessage(Component.text("Kiss interactions " + (enabled ? "enabled." : "disabled.")));
+            } catch (IllegalStateException exception) {
+                plugin.logPreferenceFailure(exception);
+                player.sendMessage(Component.text("Could not save your kiss preference. Please try again later."));
+            }
+            return;
+        }
+
+        source.sendMessage(Component.text("Usage: /spkiss toggle"));
+        source.sendMessage(Component.text("Usage: /spkiss toggle <true | false>"));
+        if (source.hasPermission("simplekiss.reload")) {
+            source.sendMessage(Component.text("Usage: /spkiss reload"));
         }
     }
 
@@ -78,9 +108,14 @@ final class VelocityToggleCommand implements SimpleCommand {
     public List<String> suggest(Invocation invocation) {
         String[] args = invocation.arguments();
         if (args.length == 1) {
-            return "toggle".startsWith(args[0].toLowerCase(Locale.ROOT))
-                    ? List.of("toggle")
-                    : List.of();
+            String partial = args[0].toLowerCase(Locale.ROOT);
+            if ("toggle".startsWith(partial)) {
+                return List.of("toggle");
+            }
+            if (invocation.source().hasPermission("simplekiss.reload") && "reload".startsWith(partial)) {
+                return List.of("reload");
+            }
+            return List.of();
         }
         if (args.length == 2 && "toggle".equalsIgnoreCase(args[0])) {
             String partial = args[1].toLowerCase(Locale.ROOT);

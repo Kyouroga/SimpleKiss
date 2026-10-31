@@ -44,13 +44,13 @@ public final class BootstrapInitializer {
         UniversalEntry universalEntry = new UniversalEntry(config);
 
         if (config.isInvalid()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; resetting config to defaults.");
             restoreDefaultConfig(plugin);
             config = PlatformConfig.from(plugin);
         }
 
         if (!universalEntry.validateSettings()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; using safe defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; using safe defaults.");
         }
 
         PlayerPreferenceDatabase preferenceDatabase = new PlayerPreferenceDatabase(
@@ -94,9 +94,8 @@ public final class BootstrapInitializer {
             previous.stopTask();
         }
 
-        plugin.getLogger().info(config.formatMessage("Reloading SimpleKiss plugin configuration"));
         if (config.isInvalid()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; resetting config to defaults.");
             restoreDefaultConfig(plugin);
             config = PlatformConfig.from(plugin);
         }
@@ -105,7 +104,6 @@ public final class BootstrapInitializer {
                 : previous.getPreferenceDatabase();
         KissManager manager = new KissManager(plugin, config, preferenceDatabase);
         manager.setTask(new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L));
-        plugin.getLogger().info(config.formatMessage("SimpleKiss reload complete"));
         return manager;
     }
 }

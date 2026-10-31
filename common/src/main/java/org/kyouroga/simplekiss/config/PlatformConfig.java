@@ -16,7 +16,15 @@ package org.kyouroga.simplekiss.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -82,6 +90,36 @@ public final class PlatformConfig {
     public static PlatformConfig from(Plugin plugin) {
         FileConfiguration config = plugin.getConfig();
         return fromMap(plugin.getName(), config.getValues(true));
+    }
+
+    /**
+     * Loads a platform configuration file using SnakeYAML's safe constructor.
+     */
+    public static PlatformConfig loadYaml(Path path, String platformName) throws IOException {
+        try (Reader reader = Files.newBufferedReader(path)) {
+            Object loaded = new Yaml(new SafeConstructor(new LoaderOptions())).load(reader);
+            if (!(loaded instanceof Map<?, ?> values)) {
+                throw new IOException("Configuration root must be a YAML mapping: " + path);
+            }
+            return fromMap(platformName, stringKeyedMap(values, path));
+        } catch (RuntimeException exception) {
+            throw new IOException("Unable to parse configuration file: " + path, exception);
+        }
+    }
+
+    private static Map<String, Object> stringKeyedMap(Map<?, ?> values, Path path) throws IOException {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (!(entry.getKey() instanceof String key)) {
+                throw new IOException("Configuration keys must be strings: " + path);
+            }
+            Object value = entry.getValue();
+            if (value instanceof Map<?, ?> nested) {
+                value = stringKeyedMap(nested, path);
+            }
+            result.put(key, value);
+        }
+        return result;
     }
 
     /**

@@ -15,6 +15,7 @@
 package org.kyouroga.simplekiss.bungee;
 
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.PluginMessageEvent;
@@ -56,14 +57,19 @@ public final class BungeePlugin extends Plugin implements Listener {
 
     @Override
     public void onEnable() {
-        ensureDefaultConfig();
+        try {
+            ensureDefaultConfig();
+            config = loadConfig();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to load BungeeCord configuration.", exception);
+        }
         getProxy().registerChannel(PlayerPreferenceMessage.CHANNEL);
         preferenceDatabase = new PlayerPreferenceDatabase(
                 getDataFolder().toPath().resolve("player-preferences.db")
         );
         getProxy().getPluginManager().registerListener(this, this);
         getProxy().getPluginManager().registerCommand(this, new BungeeToggleCommand(this, preferenceDatabase));
-        getLogger().info(config.formatMessage("BungeeCord compatibility layer active"));
+        getLogger().info("BungeeCord compatibility layer active");
         updateNotifier = BungeeUpdateNotifier.start(this, config);
     }
 
@@ -83,11 +89,10 @@ public final class BungeePlugin extends Plugin implements Listener {
     /**
      * Creates or restores the bundled config.yml when the proxy configuration is missing or invalid.
      */
-    private void ensureDefaultConfig() {
+    private void ensureDefaultConfig() throws IOException {
         File dataFolder = getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdirs()) {
-            getLogger().warning("Unable to create BungeeCord data folder for config reset.");
-            return;
+            throw new IOException("Unable to create BungeeCord data folder.");
         }
 
         File configFile = new File(dataFolder, "config.yml");
@@ -97,12 +102,38 @@ public final class BungeePlugin extends Plugin implements Listener {
 
         try (InputStream defaults = getResourceAsStream("config.yml")) {
             if (defaults == null) {
-                getLogger().warning("No bundled BungeeCord config.yml found for reset operation.");
-                return;
+                throw new IOException("No bundled BungeeCord config.yml found.");
             }
             Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private PlatformConfig loadConfig() throws IOException {
+        PlatformConfig loaded = PlatformConfig.loadYaml(
+                getDataFolder().toPath().resolve("config.yml"),
+                "BungeeCord"
+        );
+        if (loaded.isInvalid()) {
+            throw new IOException("BungeeCord configuration contains invalid settings.");
+        }
+        return loaded;
+    }
+
+    void reloadConfig(CommandSender sender) {
+        try {
+            PlatformConfig loaded = loadConfig();
+            config = loaded;
+            getLogger().info("reload complete");
+            if (sender instanceof ProxiedPlayer) {
+                sender.sendMessage(new net.md_5.bungee.api.chat.TextComponent("SimpleKiss config reloaded."));
+            }
         } catch (IOException exception) {
-            getLogger().log(Level.WARNING, "Failed to restore BungeeCord config.yml to defaults", exception);
+            getLogger().log(Level.WARNING, "Unable to reload BungeeCord configuration.", exception);
+            if (sender instanceof ProxiedPlayer) {
+                sender.sendMessage(new net.md_5.bungee.api.chat.TextComponent(
+                        "Could not reload SimpleKiss configuration. Check the proxy log."
+                ));
+            }
         }
     }
 

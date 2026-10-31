@@ -14,7 +14,11 @@
  */
 package org.kyouroga.simplekiss.bukkit;
 
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
@@ -23,7 +27,7 @@ import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.service.KissManager;
 import org.kyouroga.simplekiss.storage.PlayerPreferenceMessage;
 
-public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
+public class SimpleKiss extends JavaPlugin implements SimpleKissBridge, Listener {
 
     private KissManager manager;
     private UpdateNotifier updateNotifier;
@@ -34,6 +38,7 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        getServer().getPluginManager().registerEvents(this, this);
 
         manager = BootstrapInitializer.initialize(this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, PlayerPreferenceMessage.CHANNEL);
@@ -66,8 +71,10 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
         PlatformConfig config = PlatformConfig.from(this);
         manager = BootstrapInitializer.reload(this, manager, config);
 
-        sender.sendMessage("SimpleKiss config reloaded.");
-        getLogger().info(config.formatMessage("Reloaded plugin configuration."));
+        if (!(sender instanceof ConsoleCommandSender)) {
+            sender.sendMessage("SimpleKiss config reloaded.");
+        }
+        getLogger().info("reload complete");
     }
 
     @Override
@@ -80,6 +87,13 @@ public class SimpleKiss extends JavaPlugin implements SimpleKissBridge {
         if (manager != null) {
             manager.close();
             getLogger().info("SimpleKiss shutting down cleanly");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (manager != null) {
+            manager.forgetPlayer(KissManager.PlayerIdentity.from(event.getPlayer()));
         }
     }
 

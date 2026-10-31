@@ -43,13 +43,20 @@ public final class SimpleKissCommand implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 2 && "toggle".equalsIgnoreCase(args[0])) {
-            if (!("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
-                sender.sendMessage("Usage: /spkiss toggle <true|false>");
+        if (args.length > 0 && "toggle".equalsIgnoreCase(args[0])) {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage("Only players can check their own kiss setting.");
                 return true;
             }
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage("Only players can change their own kiss setting.");
+
+            if (args.length == 1) {
+                boolean enabled = plugin.getManager().isEnabled(KissManager.PlayerIdentity.from(player));
+                sender.sendMessage("Kiss interactions are currently " + (enabled ? "enabled." : "disabled."));
+                return true;
+            }
+
+            if (args.length != 2 || !("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
+                sender.sendMessage("Usage: /spkiss toggle [true | false]");
                 return true;
             }
 
@@ -76,11 +83,16 @@ public final class SimpleKissCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        sender.sendMessage("Usage: /spkiss toggle <true|false>");
+        sendCommandHelp(sender);
+        return true;
+    }
+
+    private void sendCommandHelp(CommandSender sender) {
+        sender.sendMessage("Usage: /spkiss toggle");
+        sender.sendMessage("Usage: /spkiss toggle <true | false>");
         if (sender.hasPermission("simplekiss.reload")) {
             sender.sendMessage("Usage: /spkiss reload");
         }
-        return true;
     }
 
     /**

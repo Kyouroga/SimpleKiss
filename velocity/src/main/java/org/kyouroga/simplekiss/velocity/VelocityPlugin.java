@@ -16,6 +16,7 @@ package org.kyouroga.simplekiss.velocity;
 
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
@@ -28,6 +29,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import org.kyouroga.simplekiss.config.PlatformConfig;
 import org.kyouroga.simplekiss.storage.PlayerPreferenceDatabase;
@@ -120,7 +122,11 @@ public final class VelocityPlugin {
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         ensureDefaultConfig(dataDirectory);
-        config = PlatformConfig.fromMap("Velocity", Map.of());
+        try {
+            config = loadConfig();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to load Velocity configuration.", exception);
+        }
         preferenceDatabase = new PlayerPreferenceDatabase(dataDirectory.resolve("player-preferences.db"));
         proxyServer.getChannelRegistrar().register(preferenceChannel);
 
@@ -132,7 +138,7 @@ public final class VelocityPlugin {
                 toggleCommandMeta,
                 new VelocityToggleCommand(this, preferenceDatabase)
         );
-        logger.info(config.formatMessage("Velocity compatibility layer active"));
+        logger.info("Velocity compatibility layer active");
         enable(proxyServer);
     }
 
@@ -171,6 +177,32 @@ public final class VelocityPlugin {
             updateNotifier.shutdown();
             updateNotifier = null;
         }
+    }
+
+    void reloadConfig(CommandSource source) {
+        try {
+            PlatformConfig loaded = loadConfig();
+            config = loaded;
+            logger.info("reload complete");
+            if (source instanceof Player) {
+                source.sendMessage(Component.text("SimpleKiss config reloaded."));
+            }
+        } catch (IOException exception) {
+            logger.warn("Unable to reload Velocity configuration.", exception);
+            if (source instanceof Player) {
+                source.sendMessage(Component.text(
+                        "Could not reload SimpleKiss configuration. Check the proxy log."
+                ));
+            }
+        }
+    }
+
+    private PlatformConfig loadConfig() throws IOException {
+        PlatformConfig loaded = PlatformConfig.loadYaml(dataDirectory.resolve("config.yml"), "Velocity");
+        if (loaded.isInvalid()) {
+            throw new IOException("Velocity configuration contains invalid settings.");
+        }
+        return loaded;
     }
 
     /**
@@ -248,6 +280,10 @@ public final class VelocityPlugin {
     public String getPluginVersion() {
         String version = VelocityPlugin.class.getPackage().getImplementationVersion();
         return version == null || version.isBlank() ? "1.1.0" : version;
+    }
+
+    void logUpdateAvailable(String message) {
+        logger.warn(message);
     }
 
     /**

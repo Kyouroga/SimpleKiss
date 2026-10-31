@@ -15,13 +15,18 @@
 package org.kyouroga.simplekiss.config;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.kyouroga.simplekiss.update.ModrinthUpdateChecker;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlatformConfigTest {
@@ -56,6 +61,33 @@ class PlatformConfigTest {
         assertEquals("simplekiss", platformConfig.getModrinthProjectId());
         assertEquals("release", platformConfig.getModrinthVersionType());
         assertEquals(6, platformConfig.getUpdateCheckIntervalHours());
+    }
+
+    @Test
+    void loadYamlReadsNestedPlatformSettings(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve("config.yml");
+        Files.writeString(configFile, """
+                distance: 12.5
+                charge-time: 30
+                particles:
+                  count: 7
+                  offset: 1.2
+                """);
+
+        PlatformConfig platformConfig = PlatformConfig.loadYaml(configFile, "TestPlatform");
+
+        assertEquals(12.5, platformConfig.getDistance());
+        assertEquals(30, platformConfig.getChargeTime());
+        assertEquals(7, platformConfig.getParticleCount());
+        assertEquals(1.2, platformConfig.getParticleOffset());
+    }
+
+    @Test
+    void loadYamlRejectsNonMappingConfiguration(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve("config.yml");
+        Files.writeString(configFile, "- not\n- a\n- mapping\n");
+
+        assertThrows(IOException.class, () -> PlatformConfig.loadYaml(configFile, "TestPlatform"));
     }
 
     /**
