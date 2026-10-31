@@ -16,7 +16,15 @@ package org.kyouroga.simplekiss.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -33,10 +41,9 @@ public final class PlatformConfig {
     private final double particleOffset;
     private final boolean updateCheckEnabled;
     private final String updateNotifyPermission;
-    private final String githubOwner;
-    private final String githubRepo;
-    private final String githubBranch;
-    private final String githubTagPrefix;
+    private final String modrinthProjectId;
+    private final String modrinthVersionType;
+    private final int updateCheckIntervalHours;
 
     /**
      * Creates a configuration from already parsed values.
@@ -49,11 +56,23 @@ public final class PlatformConfig {
                           int particleCount,
                           double particleOffset,
                           boolean updateCheckEnabled,
+                          String updateNotifyPermission) {
+        this(platformName, distance, chargeTime, lookAngle, cooldownTicks, particleCount, particleOffset,
+                updateCheckEnabled, updateNotifyPermission, "simplekiss", "release", 6);
+    }
+
+    public PlatformConfig(String platformName,
+                          double distance,
+                          int chargeTime,
+                          double lookAngle,
+                          long cooldownTicks,
+                          int particleCount,
+                          double particleOffset,
+                          boolean updateCheckEnabled,
                           String updateNotifyPermission,
-                          String githubOwner,
-                          String githubRepo,
-                          String githubBranch,
-                          String githubTagPrefix) {
+                          String modrinthProjectId,
+                          String modrinthVersionType,
+                          int updateCheckIntervalHours) {
         this.platformName = platformName;
         this.distance = distance;
         this.chargeTime = chargeTime;
@@ -63,15 +82,44 @@ public final class PlatformConfig {
         this.particleOffset = particleOffset;
         this.updateCheckEnabled = updateCheckEnabled;
         this.updateNotifyPermission = updateNotifyPermission;
-        this.githubOwner = githubOwner;
-        this.githubRepo = githubRepo;
-        this.githubBranch = githubBranch;
-        this.githubTagPrefix = githubTagPrefix;
+        this.modrinthProjectId = modrinthProjectId == null || modrinthProjectId.isBlank() ? "simplekiss" : modrinthProjectId;
+        this.modrinthVersionType = modrinthVersionType == null || modrinthVersionType.isBlank() ? "release" : modrinthVersionType.toLowerCase(Locale.ROOT);
+        this.updateCheckIntervalHours = Math.max(1, updateCheckIntervalHours);
     }
 
     public static PlatformConfig from(Plugin plugin) {
         FileConfiguration config = plugin.getConfig();
         return fromMap(plugin.getName(), config.getValues(true));
+    }
+
+    /**
+     * Loads a platform configuration file using SnakeYAML's safe constructor.
+     */
+    public static PlatformConfig loadYaml(Path path, String platformName) throws IOException {
+        try (Reader reader = Files.newBufferedReader(path)) {
+            Object loaded = new Yaml(new SafeConstructor(new LoaderOptions())).load(reader);
+            if (!(loaded instanceof Map<?, ?> values)) {
+                throw new IOException("Configuration root must be a YAML mapping: " + path);
+            }
+            return fromMap(platformName, stringKeyedMap(values, path));
+        } catch (RuntimeException exception) {
+            throw new IOException("Unable to parse configuration file: " + path, exception);
+        }
+    }
+
+    private static Map<String, Object> stringKeyedMap(Map<?, ?> values, Path path) throws IOException {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            if (!(entry.getKey() instanceof String key)) {
+                throw new IOException("Configuration keys must be strings: " + path);
+            }
+            Object value = entry.getValue();
+            if (value instanceof Map<?, ?> nested) {
+                value = stringKeyedMap(nested, path);
+            }
+            result.put(key, value);
+        }
+        return result;
     }
 
     /**
@@ -86,12 +134,11 @@ public final class PlatformConfig {
                 getLong(config, "cooldown", 100L),
                 getInt(config, "particles.count", 10),
                 getDouble(config, "particles.offset", 0.5),
-                getBoolean(config, "update-check.enabled", true),
-                getString(config, "update-check.notify-permission", "simplekiss.reload"),
-                getString(config, "update-check.github-owner", "KyourOga"),
-                getString(config, "update-check.github-repo", "SimpleKiss"),
-                getString(config, "update-check.github-branch", "main"),
-                getString(config, "update-check.github-tag-prefix", "v")
+                true,
+                "simplekiss.reload",
+                "simplekiss",
+                "release",
+                6
         );
     }
 
@@ -213,24 +260,19 @@ public final class PlatformConfig {
         return updateNotifyPermission;
     }
 
-    /** Returns the GitHub repository owner used for update checks. */
-    public String getGithubOwner() {
-        return githubOwner;
+    /** Returns the Modrinth project slug used for update checks. */
+    public String getModrinthProjectId() {
+        return modrinthProjectId;
     }
 
-    /** Returns the GitHub repository name used for update checks. */
-    public String getGithubRepo() {
-        return githubRepo;
+    /** Returns the Modrinth release channel the checker is configured to prefer. */
+    public String getModrinthVersionType() {
+        return modrinthVersionType;
     }
 
-    /** Returns the branch compared during update checks. */
-    public String getGithubBranch() {
-        return githubBranch;
-    }
-
-    /** Returns the prefix expected on release tags. */
-    public String getGithubTagPrefix() {
-        return githubTagPrefix;
+    /** Returns how often the update check should run, in hours. */
+    public int getUpdateCheckIntervalHours() {
+        return updateCheckIntervalHours;
     }
 
     /**

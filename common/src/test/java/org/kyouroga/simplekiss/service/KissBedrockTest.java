@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,10 +56,13 @@ class KissBedrockTest {
         Object player = new TestPlayer(UUID.fromString("00000000-0000-0000-0000-000000000001"));
 
         assertFalse(support.isBedrockPlayer(player));
+        assertFalse(support.isBedrockPlayer(player));
+        assertEquals(1, ((TestPlayer) player).getUniqueIdCalls);
     }
 
     private static final class TestPlayer {
         private final UUID uniqueId;
+        private int getUniqueIdCalls;
 
         /** Creates a player-like object with the supplied UUID. */
         private TestPlayer(UUID uniqueId) {
@@ -67,6 +71,7 @@ class KissBedrockTest {
 
         /** Returns the UUID exposed to the Bedrock detector. */
         public UUID getUniqueId() {
+            getUniqueIdCalls++;
             return uniqueId;
         }
     }

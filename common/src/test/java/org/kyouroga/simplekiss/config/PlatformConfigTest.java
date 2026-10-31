@@ -15,12 +15,18 @@
 package org.kyouroga.simplekiss.config;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.kyouroga.simplekiss.update.ModrinthUpdateChecker;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlatformConfigTest {
@@ -41,10 +47,6 @@ class PlatformConfigTest {
         particles.put("offset", 1.2);
         config.put("particles", particles);
 
-        Map<String, Object> updateCheck = new LinkedHashMap<>();
-        updateCheck.put("enabled", false);
-        config.put("update-check", updateCheck);
-
         PlatformConfig platformConfig = PlatformConfig.fromMap("TestPlatform", config);
 
         assertEquals("TestPlatform", platformConfig.getPlatformName());
@@ -54,9 +56,49 @@ class PlatformConfigTest {
         assertEquals(250L, platformConfig.getCooldownTicks());
         assertEquals(7, platformConfig.getParticleCount());
         assertEquals(1.2, platformConfig.getParticleOffset());
-        assertFalse(platformConfig.isUpdateCheckEnabled());
+        assertTrue(platformConfig.isUpdateCheckEnabled());
         assertEquals("simplekiss.reload", platformConfig.getUpdateNotifyPermission());
-        assertEquals("KyourOga", platformConfig.getGithubOwner());
+        assertEquals("simplekiss", platformConfig.getModrinthProjectId());
+        assertEquals("release", platformConfig.getModrinthVersionType());
+        assertEquals(6, platformConfig.getUpdateCheckIntervalHours());
+    }
+
+    @Test
+    void loadYamlReadsNestedPlatformSettings(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve("config.yml");
+        Files.writeString(configFile, """
+                distance: 12.5
+                charge-time: 30
+                particles:
+                  count: 7
+                  offset: 1.2
+                """);
+
+        PlatformConfig platformConfig = PlatformConfig.loadYaml(configFile, "TestPlatform");
+
+        assertEquals(12.5, platformConfig.getDistance());
+        assertEquals(30, platformConfig.getChargeTime());
+        assertEquals(7, platformConfig.getParticleCount());
+        assertEquals(1.2, platformConfig.getParticleOffset());
+    }
+
+    @Test
+    void loadYamlRejectsNonMappingConfiguration(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve("config.yml");
+        Files.writeString(configFile, "- not\n- a\n- mapping\n");
+
+        assertThrows(IOException.class, () -> PlatformConfig.loadYaml(configFile, "TestPlatform"));
+    }
+
+    /**
+     * Verifies that version comparisons respect release ordering and prerelease channels.
+     */
+    @Test
+    void modrinthVersionComparisonOrdersReleasesAndPrereleases() {
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0", "1.1.9"));
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0", "1.2.0-beta.1"));
+        assertTrue(ModrinthUpdateChecker.isNewer("1.2.0-beta.1", "1.2.0-alpha.2"));
+        assertEquals(2, ModrinthUpdateChecker.calculateBehindBy("1.0.0", "1.2.0"));
     }
 
     /**
@@ -73,11 +115,7 @@ class PlatformConfigTest {
                 10,
                 0.5,
                 true,
-                "simplekiss.reload",
-                "KyourOga",
-                "SimpleKiss",
-                "main",
-                "v"
+                "simplekiss.reload"
         );
 
         assertEquals("[TESTPLATFORM] ready", platformConfig.formatMessage("ready"));

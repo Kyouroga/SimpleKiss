@@ -12,9 +12,19 @@ This covers the build setup for SimpleKiss.
 
 ## Java Version
 
-Recent JDK 21 or newer installation is the expected baseline.
+JDK 25 or newer is required only to build against the currently published Paper 26.3 pre-2 API. Generated plugin classes target Java 21-compatible bytecode; this does not require a server to run Java 25. Use the Java runtime required by the Minecraft server version being run.
 
 If a build fails because of Java, make sure the correct JDK is selected in your shell before running Gradle. On most systems this means setting `JAVA_HOME` to the desired JDK installation.
+
+In Windows PowerShell, set `JAVA_HOME` to your JDK 25 installation before running the wrapper:
+
+Replace `C:\Path\To\JDK-25` below with the actual JDK installation directory on your computer. The directory should contain a `bin\java.exe` file; do not include `\bin` in `JAVA_HOME`.
+
+```powershell
+$env:JAVA_HOME = "C:\Path\To\JDK-25"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+.\gradlew.bat clean verifyPlatformJars
+```
 
 ## Build Targets
 
@@ -51,6 +61,10 @@ Use the command that matches the platform you want to build.
 ```
 
 This builds the full project, packages Bukkit/Spigot, BungeeCord, and Velocity platform jars with shared runtime code included, and writes the resulting jars into the `target` folder.
+
+### Project version control
+
+The project version is defined once by the `simplekissVersion` property in the root `gradle.properties` file.
 
 ### Verify platform jar packaging
 

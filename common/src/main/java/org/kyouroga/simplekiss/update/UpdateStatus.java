@@ -23,13 +23,22 @@ public final class UpdateStatus {
     private final String currentTag;
     private final String targetBranch;
     private final String repoUrl;
+    private final String latestVersion;
+    private final String releaseType;
     
     public UpdateStatus(boolean updateAvailable, int behindBy, String currentTag, String targetBranch, String repoUrl) {
+        this(updateAvailable, behindBy, currentTag, targetBranch, repoUrl, "", "");
+    }
+
+    public UpdateStatus(boolean updateAvailable, int behindBy, String currentTag, String targetBranch, String repoUrl,
+                       String latestVersion, String releaseType) {
         this.updateAvailable = updateAvailable;
         this.behindBy = behindBy;
         this.currentTag = currentTag;
         this.targetBranch = targetBranch;
         this.repoUrl = repoUrl;
+        this.latestVersion = latestVersion == null ? "" : latestVersion;
+        this.releaseType = releaseType == null ? "" : releaseType;
     }
 
     /**
@@ -62,5 +71,20 @@ public final class UpdateStatus {
     /** Returns the repository URL for the update source. */
     public String getRepoUrl() {
         return repoUrl;
+    }
+
+    /** Returns the newest available version string. */
+    public String getLatestVersion() {
+        return latestVersion;
+    }
+
+    /** Returns the latest version label without a known platform prefix. */
+    public String getDisplayLatestVersion() {
+        return latestVersion.replaceFirst("(?i)^(?:velocity|bungeecord|bungee|spigot|bukkit)[-_ ]+", "");
+    }
+
+    /** Returns the channel of the newest version, such as release or beta. */
+    public String getReleaseType() {
+        return releaseType;
     }
 }

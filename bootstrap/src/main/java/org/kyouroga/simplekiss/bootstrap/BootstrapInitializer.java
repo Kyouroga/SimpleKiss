@@ -17,9 +17,9 @@ package org.kyouroga.simplekiss.bootstrap;
 import org.kyouroga.simplekiss.api.SimpleKissBridge;
 import org.kyouroga.simplekiss.compat.UniversalEntry;
 import org.kyouroga.simplekiss.config.PlatformConfig;
-import org.kyouroga.simplekiss.service.KissBedrock;
 import org.kyouroga.simplekiss.service.KissManager;
 import org.kyouroga.simplekiss.service.KissTask;
+import org.kyouroga.simplekiss.storage.PlayerPreferenceDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,28 +44,21 @@ public final class BootstrapInitializer {
         UniversalEntry universalEntry = new UniversalEntry(config);
 
         if (config.isInvalid()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; resetting config to defaults.");
             restoreDefaultConfig(plugin);
             config = PlatformConfig.from(plugin);
         }
 
         if (!universalEntry.validateSettings()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; using safe defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; using safe defaults.");
         }
 
-        plugin.getLogger().info(universalEntry.statusMessage());
+        PlayerPreferenceDatabase preferenceDatabase = new PlayerPreferenceDatabase(
+                plugin.getDataFolder().toPath().resolve("player-preferences.db")
+        );
+        KissManager manager = new KissManager(plugin, config, preferenceDatabase);
+        manager.setTask(new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L));
 
-        /**
-         * Announce optional Geyser/Floodgate Bedrock support when the bridge APIs are present.
-         */
-        KissBedrock kissBedrock = new KissBedrock();
-        plugin.getLogger().info(config.formatMessage(kissBedrock.describeSupport()));
-        plugin.getLogger().info(config.formatMessage("Starting SimpleKiss core services"));
-
-        KissManager manager = new KissManager(plugin, config);
-        new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L);
-
-        plugin.getLogger().info(config.formatMessage("SimpleKiss bootstrap complete"));
         return manager;
     }
 
@@ -86,7 +79,6 @@ public final class BootstrapInitializer {
                 return;
             }
             Files.copy(defaults, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            plugin.saveConfig();
             plugin.reloadConfig();
         } catch (IOException exception) {
             plugin.getLogger().log(Level.WARNING, "Failed to reset config.yml to defaults", exception);
@@ -99,17 +91,19 @@ public final class BootstrapInitializer {
     public static KissManager reload(SimpleKissBridge plugin, KissManager previous, PlatformConfig config) {
         if (previous != null) {
             previous.resetAll();
+            previous.stopTask();
         }
 
-        plugin.getLogger().info(config.formatMessage("Reloading SimpleKiss plugin configuration"));
         if (config.isInvalid()) {
-            plugin.getLogger().warning(config.formatMessage("Invalid plugin settings detected; resetting config to defaults."));
+            plugin.getLogger().warning("Invalid plugin settings detected; resetting config to defaults.");
             restoreDefaultConfig(plugin);
             config = PlatformConfig.from(plugin);
         }
-        KissManager manager = new KissManager(plugin, config);
-        new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L);
-        plugin.getLogger().info(config.formatMessage("SimpleKiss reload complete"));
+        PlayerPreferenceDatabase preferenceDatabase = previous == null
+                ? new PlayerPreferenceDatabase(plugin.getDataFolder().toPath().resolve("player-preferences.db"))
+                : previous.getPreferenceDatabase();
+        KissManager manager = new KissManager(plugin, config, preferenceDatabase);
+        manager.setTask(new KissTask(plugin, manager, config).runTaskTimer(plugin, 0L, 1L));
         return manager;
     }
 }

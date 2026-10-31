@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.bundling.Jar
 
 group = 'org.kyouroga'
-version = '1.1.0'
+version = providers.gradleProperty('simplekissVersion').get()
 
 def artifactNames = [
     bukkit: 'SimpleKiss-Spigot',
@@ -15,6 +15,12 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
+    tasks.named('processResources', ProcessResources) {
+        filesMatching(['plugin.yml', 'bungee.yml', 'velocity-plugin.json']) {
+            expand(projectVersion: rootProject.version)
+        }
+    }
+
     repositories {
         mavenCentral()
         maven {
@@ -23,17 +29,29 @@ subprojects {
     }
 
     def currentJava = JavaVersion.current()
+    if (currentJava < JavaVersion.VERSION_25) {
+        throw new GradleException('Building against the Paper 26.3 API requires Gradle to run on JDK 25 or newer. Set JAVA_HOME to JDK 25 and rerun the build.')
+    }
 
     java {
-        sourceCompatibility = currentJava
-        targetCompatibility = currentJava
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
         toolchain {
             languageVersion = JavaLanguageVersion.of(currentJava.majorVersion.toInteger())
         }
     }
 
+    configurations.configureEach {
+        if (name.endsWith('Classpath')) {
+            attributes.attribute(
+                    org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+                        currentJava.majorVersion.toInteger()
+            )
+        }
+    }
+
     tasks.withType(JavaCompile).configureEach {
-        options.release = currentJava.majorVersion.toInteger()
+        options.release = 21
         options.encoding = 'UTF-8'
     }
 
@@ -42,10 +60,17 @@ subprojects {
         archiveClassifier.set('')
         if (artifactNames.containsKey(project.name)) {
             archiveBaseName.set(artifactNames[project.name])
+            archiveVersion.set(project.version.toString())
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
             from(project(':common').sourceSets.main.output)
             from(project(':bootstrap').sourceSets.main.output)
             from(project(':universal').sourceSets.main.output)
+            from {
+                project(':common').configurations.runtimeClasspath.collect { dependency ->
+                    dependency.isDirectory() ? dependency : zipTree(dependency)
+                }
+            }
+            exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
         }
     }
 }
@@ -57,10 +82,9 @@ tasks.register('copyArtifacts', Copy) {
     description = 'Copies built platform jars into the root target directory'
     dependsOn platformProjects.collect { it.tasks.named('jar') }
 
-    from(platformProjects.collect { it.layout.buildDirectory.dir('libs') }) {
-        include '*.jar'
-        eachFile { file -> file.path = file.name }
-    }
+    from(platformProjects.collect { project ->
+        project.layout.buildDirectory.file("libs/${artifactNames[project.name]}-${project.version}.jar")
+    })
 
     into rootProject.layout.projectDirectory.dir('target')
 }
@@ -77,7 +101,7 @@ tasks.register('verifyPlatformJars') {
         ]
 
         platformProjects.each { project ->
-            def jarFile = project.layout.buildDirectory.file("libs/${artifactNames[project.name]}.jar").get().asFile
+            def jarFile = project.layout.buildDirectory.file("libs/${artifactNames[project.name]}-${project.version}.jar").get().asFile
             if (!jarFile.exists()) {
                 throw new GradleException("Missing jar for platform project: ${project.name}")
             }

@@ -49,4 +49,12 @@ class UpdateStatusTest {
         assertEquals("main", status.getTargetBranch());
         assertEquals("https://example.com/repo", status.getRepoUrl());
     }
+
+    @Test
+    void displayVersionOmitsKnownPlatformPrefix() {
+        UpdateStatus status = new UpdateStatus(true, 1, "1.1.0", "latest", "", "velocity-beta-1.0", "beta");
+
+        assertEquals("beta-1.0", status.getDisplayLatestVersion());
+        assertEquals("velocity-beta-1.0", status.getLatestVersion());
+    }
 }

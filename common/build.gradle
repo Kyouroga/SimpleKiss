@@ -1,9 +1,11 @@
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+    implementation 'org.xerial:sqlite-jdbc:3.49.1.0'
+    implementation 'org.yaml:snakeyaml:2.0'
+    compileOnly 'io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha'
     compileOnly 'com.velocitypowered:velocity-api:3.4.0'
     compileOnly 'net.md-5:bungeecord-api:1.21-R0.4'
 
-    testImplementation 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+    testImplementation 'io.papermc.paper:paper-api:26.3-pre-2.build.0-alpha'
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

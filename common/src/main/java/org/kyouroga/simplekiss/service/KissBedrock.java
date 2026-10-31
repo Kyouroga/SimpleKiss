@@ -16,9 +16,12 @@ package org.kyouroga.simplekiss.service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 public final class KissBedrock {
+    private final Map<Object, Boolean> detectionCache = new WeakHashMap<>();
 
     /**
      * Returns whether the supplied player is detected as a Bedrock player by Geyser or Floodgate.
@@ -26,17 +29,25 @@ public final class KissBedrock {
      * @param player the player to inspect
      * @return true when Bedrock support is available and the player is identified as Bedrock, otherwise false
      */
-    public boolean isBedrockPlayer(Object player) {
+    public synchronized boolean isBedrockPlayer(Object player) {
         if (player == null) {
             return false;
         }
 
+        Boolean cachedResult = detectionCache.get(player);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
+
         UUID uniqueId = resolveUniqueId(player);
         if (uniqueId == null) {
+            detectionCache.put(player, false);
             return false;
         }
 
-        return isFloodgatePlayer(uniqueId) || isGeyserPlayer(uniqueId);
+        boolean bedrockPlayer = isFloodgatePlayer(uniqueId) || isGeyserPlayer(uniqueId);
+        detectionCache.put(player, bedrockPlayer);
+        return bedrockPlayer;
     }
 
     /**
