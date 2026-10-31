@@ -35,9 +35,10 @@ Player toggle preferences are stored in `player-preferences.db` in each plugin's
 
 | Command | Permission | Description |
 | --- | --- | --- |
+| `/spkiss toggle` | Everyone | Shows whether your kiss interactions are currently enabled or disabled. |
 | `/spkiss toggle true` | Everyone | Enables your kiss interactions. Available on Paper, BungeeCord, and Velocity. |
 | `/spkiss toggle false` | Everyone | Disables your kiss interactions, including receiving kisses. Available on Paper, BungeeCord, and Velocity. |
-| `/spkiss reload` | `simplekiss.reload` (operators by default) | Reloads the Paper configuration; hidden from unauthorized tab completion. |
+| `/spkiss reload` | `simplekiss.reload` (operators by default) | Reloads the platform configuration on Paper, BungeeCord, or Velocity. |
 
 ## Configuration
 
